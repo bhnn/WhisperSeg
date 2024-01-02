@@ -1,5 +1,11 @@
+<<<<<<< HEAD
 model/
 result/
+=======
+.python-version
+
+# Byte-compiled / optimized / DLL files
+>>>>>>> 7d5a61a (Excluded pyenv config file)
 __pycache__/
 .ipynb_checkpoints/
 data/datasets
