@@ -6,7 +6,11 @@ datasets==2.14.3
 scipy==1.11.0
 wandb
 nltk
+<<<<<<< HEAD
 ctranslate2==4.0.0
+=======
+ctranslate2==3.18.0
+>>>>>>> f1da741 (Fix needed for case-sensitive file system)
 jupyterlab
 sentencepiece==0.1.99
 librosa
@@ -14,6 +18,10 @@ ipywidgets
 matplotlib
 moviepy
 flask
+<<<<<<< HEAD
 flask-cors
 streamlit
 plotly
+=======
+flask-cors
+>>>>>>> f1da741 (Fix needed for case-sensitive file system)

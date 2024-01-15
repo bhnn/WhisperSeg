@@ -31,6 +31,7 @@ def count(path: str) -> List[defaultdict]:
                 label = lines[i][-1]
             d[label] += 1
         dicts.append(d)
+    print(f"Processed {len(dicts)} files.")
     return dicts
 
 def sum_dicts(dicts: list) -> defaultdict:
@@ -42,7 +43,6 @@ def sum_dicts(dicts: list) -> defaultdict:
     Returns:
         defaultdict: Dictionary containing the sum of all annotations per label
     """
-    print(dicts)
     d = defaultdict(int)
     total = 0
     for di in dicts:
@@ -86,7 +86,7 @@ if __name__ == "__main__":
         # filemode='a',
         # level=logging.INFO,
     )
-    logging.getLogger().setLevel(logging.INFO)
+    logging.getLogger().setLevel(logging.WARNING)
 
     parser = argparse.ArgumentParser(description="Assembles statistics for Raven selection tables in directory recursively: number of annotations per label")
     parser.add_argument("-p", "--path", type=str, help="Path to the .txt file", required=True)

@@ -15,8 +15,13 @@ def clean_tables(args: Namespace):
             for j in [i, i+1]: # waveform part + spectrogram part
                 lines[j][0] = str(d['id'])
                 if lines[j][-1] not in ['p1', 'p2', 'p3']:
-                    stripped_label = lines[j][-1].rstrip(digits)
-                    lines[j][-1] = stripped_label + str(d[stripped_label])
+                    prefix = ''
+                    if lines[j][-1][0] == '-':
+                        prefix = '-'
+                        stripped_label = lines[j][-1][1:].rstrip(digits)
+                    else:
+                        stripped_label = lines[j][-1].rstrip(digits)
+                    lines[j][-1] = prefix + stripped_label + str(d[stripped_label])
                 out.append(lines[j])
             d['id'] += 1
             d[stripped_label] += 1
