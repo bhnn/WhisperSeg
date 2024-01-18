@@ -5,12 +5,8 @@ from pathlib import Path
 from string import digits
 from typing import List
 
-classes = {
-        'P1': ['p1', 'b', 'ca', 'c', 'cl', 'cm', 'e', 'ht', 'l', 'm', 'n', 'o', 'pc', 'sh', 'ud'],
-        'P2': ['p2', 'd', 'hw', 'h', 'mo', 'pu', 'up', 'w'], 
-        'P3': ['p3', 'ho', 'hu', 'se', 'sk', 'sq', 't', 'wa', 'y'],
-        'misc': ['fluff', 'help'],
-    }
+import yaml
+
 
 def count(path: str) -> List[defaultdict]:
     """Counts the number of annotations per label in all .txt files in a directory recursively
@@ -41,11 +37,12 @@ def count(path: str) -> List[defaultdict]:
     print(f"Processed {len(dicts)} files.")
     return dicts
 
-def sum_dicts(dicts: list) -> defaultdict:
+def sum_dicts(dicts: list, classes: dict) -> defaultdict:
     """Sums up the number of annotations per label in a list of dictionaries.
 
     Args:
         dicts (list): List of dictionaries containing the number of annotations per label
+        classes (dict): Dictionary containing the valid annotation labels
 
     Returns:
         defaultdict: Dictionary containing the sum of all annotations per label
@@ -67,27 +64,31 @@ def sum_dicts(dicts: list) -> defaultdict:
         logging.warning(f"Labels not counted: {set(not_counted)}")
     return d, total1
 
-def pretty_print(d: defaultdict, show_zeros: bool = True):
+def pretty_print(d: defaultdict, classes: dict, show_zeros: bool = True):
     """Pretty prints the number of annotations per label
 
     Args:
         d (defaultdict): Dictionary containing the sums of all annotations per label
+        classes (dict): Dictionary containing the valid annotation labels
         show_zeros (bool, optional): Whether to show annotations with 0 occurrences. Defaults to True.
     """
     if show_zeros:
-        stats = '\n'.join((cl + ':    ' + f'{"":>4}'.join([f"{k:>2}: {d[k]:>2}" for k in classes[cl]])) for cl in classes.keys())
+        stats = '\n'.join((cl + ':  ' + f'{"":>4}'.join([f"{k:>2}: {d[k]:>3}" for k in classes[cl]])) for cl in classes.keys())
     else:
-        stats = '\n'.join((cl + ':    ' + f'{"":>4}'.join([f"{k:>2}: {d[k]:>2}" for k in classes[cl] if d[k] > 0])) for cl in classes.keys())
+        stats = '\n'.join((cl + ':  ' + f'{"":>4}'.join([f"{k:>2}: {d[k]:>3}" for k in classes[cl] if d[k] > 0])) for cl in classes.keys())
     print(stats)
 
-def annotation_statistics(args: argparse.Namespace):
+def annotation_statistics(path: str, config_path: str):
     """Assembles statistics for Raven selection tables in directory recursively: number of annotations per label
 
     Args:
-        args (argparse.Namespace): Command line arguments containing at least a file path as `path`
+        path (str): Path to directory in which to search for selection table .txt files
+        config_path (str): Path to the config file detailing all annotation classes
     """
-    d, total = sum_dicts(count(args.path))
-    pretty_print(d)
+    with open(config_path, 'r') as f:
+        classes = yaml.safe_load(f)
+    d, total = sum_dicts(count(path), classes)
+    pretty_print(d, classes)
     print(f"Total annotations: {total}")
 
 if __name__ == "__main__":
@@ -99,7 +100,8 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(logging.WARNING)
 
     parser = argparse.ArgumentParser(description="Assembles statistics for Raven selection tables in directory recursively: number of annotations per label")
-    parser.add_argument("-p", "--path", type=str, help="Path to the .txt file", required=True)
+    parser.add_argument("-p", "--path", type=str, help="Path to directory in which to search for selection table .txt files", required=True)
+    parser.add_argument("-c", "--config-path", type=str, help="Path to the config file detailing all annotation classes", default='./config/classes.yaml')
     args = parser.parse_args()
 
-    annotation_statistics(args)
+    annotation_statistics(**vars(args))
