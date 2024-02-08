@@ -9,7 +9,7 @@ import yaml
 
 
 def make_json(file_path: str, config_path: str, species: str, sampling_rate: int, min_frequency: int, spec_time_step: 
-              float, min_segment_length: float, tolerance: float, time_per_frame: float, epsilon: float, output_path: str):
+              float, tolerance: float, time_per_frame: float, epsilon: float, output_path: str):
     """Converts Raven selection tables to .json files for WhisperSeg use
 
     Args:
@@ -26,6 +26,8 @@ def make_json(file_path: str, config_path: str, species: str, sampling_rate: int
         output_path (str): Path to the output .json file. Defaults to the input directory.
     """
     files = 0
+    completed_files = dict()
+    smallest_segment = float('inf')
     with open(config_path, 'r') as f:
         classes = yaml.safe_load(f)
         classes.pop('misc', None) # to remove labels such as 'fluff' and 'help'
@@ -42,11 +44,13 @@ def make_json(file_path: str, config_path: str, species: str, sampling_rate: int
             "sr": sampling_rate,
             "min_frequency": min_frequency,
             "spec_time_step": spec_time_step,
-            "min_segment_length": min_segment_length if min_segment_length > 0 else min([lines[i][7] for i in range(len(lines))]), # Delta Time (s) column in Raven tables
+            "min_segment_length": float(min([l[7] for l in lines])), # Delta Time (s) column in Raven tables
             "tolerance": tolerance,
             "time_per_frame_for_scoring": time_per_frame,
             "eps": epsilon,
         }
+        smallest_segment = min(smallest_segment, content["min_segment_length"])
+        logging.info(f"smallest_segment so far: {smallest_segment:>7.5f}")
         # iterate over selection table list in steps of 2 (waveform part + spectrogram part)
         invalid = []
         for i in range(0, len(lines), 2):
@@ -64,20 +68,24 @@ def make_json(file_path: str, config_path: str, species: str, sampling_rate: int
                 invalid.append(label)
         if len(invalid) > 0:
             logging.warning(f"Invalid labels found in {p}: {set(invalid)}. These have been ignored in the output file.")
-        # removes "".Table.1.selections.txt" from the end of the file name
         if output_path == "":
-            output_path = p.parent.absolute()
-        with open(join(output_path, p.stem.split('.')[0] + '.json'), "w") as fp:
-            json.dump(content, fp, indent=2)
+            new_path = p.parent.absolute()
+        else:
+            new_path = output_path
+        # removes "".Table.1.selections.txt" from the end of the file name
+        new_path = join(new_path, p.stem.split('.')[0] + '.json')
+        completed_files[new_path] = content
         files += 1
+
+    for file_name, content in completed_files.items():
+        # unify min_segment_length across all files
+        content["min_segment_length"] = smallest_segment
+        with open(file_name, "w") as fp:
+            json.dump(content, fp, indent=2)
     print(f"Processed {files} files.")
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        # filename='annotation_statistics.log',
-        # filemode='a',
-        # level=logging.INFO,
-    )
+    logging.basicConfig()
     logging.getLogger().setLevel(logging.WARNING)
 
     parser = argparse.ArgumentParser(description="Prepares Raven selection tables for WhisperSeg use: convert to .json and add some more info")
@@ -87,7 +95,6 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--sampling_rate", type=int, help="The sampling rate that is used to load the audio. The audio file will be resampled to the sampling rate specified by this, regardless of the native sampling rate of the audio file.", default=48000)
     parser.add_argument("-f", "--min_frequency", type=int, help="The minimum frequency when computing the Log Melspectrogram. Frequency components below min_frequency will not be included in the input spectrogram.", default=0)
     parser.add_argument("-t", "--spec_time_step", type=float, help="Spectrogram Time Resolution. By default, one single input spectrogram of WhisperSeg contains 1000 columns. 'spec_time_step' represents the time difference between two adjacent columns in the spectrogram. It is equal to FFT_hop_size / sampling_rate", default=0.0025)
-    parser.add_argument("-m", "--min_segment_length", type=float, help="The minimum allowed length of predicted segments. The predicted segments whose length is below 'min_segment_length' will be discarded. Defaults to 0, then automatically determ shortest segment from annotations", default=0)
     parser.add_argument("-d", "--tolerance", type=float, help="When computing the F1_seg score, we need to check if both the absolute difference between the predicted onset and the ground-truth onset and the absolute difference between the predicted and ground-truth offsets are below a tolerance (in second)", default=0.01)
     parser.add_argument("-i", "--time_per_frame", type=float, help="The time bin size (in second) used when computing the F1_frame score.", default=0.001)
     parser.add_argument("-e", "--epsilon", type=float, help="The threshold epsilon_vote during the multi-trial majority voting when processing long audio files", default=0.02)
