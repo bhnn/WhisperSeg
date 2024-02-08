@@ -42,7 +42,7 @@ def clean_tables(path: str, remove_fluff: bool = False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Cleans up Raven selection tables: renumbers IDs, numbers labels, removes fluff")
     parser.add_argument("-p", "--path", type=str, help="Path to the selection table.txt file", required=True)
-    parser.add_argument("-f", "--fluff", action="store_true", help="Whether to remove fluff annotations (default: False)", dest="remove_fluff")
+    parser.add_argument("-f", "--fluff", action="store_true", help="Whether to remove 'fluff' annotations (default: False)", dest="remove_fluff")
     args = parser.parse_args()
 
     clean_tables(**vars(args))
