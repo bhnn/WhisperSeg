@@ -9,7 +9,7 @@ import yaml
 
 
 def make_json(file_path: str, config_path: str, species: str, sampling_rate: int, min_frequency: int, spec_time_step: 
-              float, tolerance: float, time_per_frame: float, epsilon: float, output_path: str):
+              float, tolerance: float, time_per_frame: float, epsilon: float, output_path: str = ""):
     """Converts Raven selection tables to .json files for WhisperSeg use
 
     Args:
