@@ -65,3 +65,5 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--num_trials", type=int, help="Number of trials", default=3)
     args = parser.parse_args()
 
+    infer(**vars(args))
+
