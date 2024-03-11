@@ -68,7 +68,7 @@ def make_json(file_path: str, config_path: str, species: str, sampling_rate: int
                 invalid.append(label)
         if len(invalid) > 0:
             logging.warning(f"Invalid labels found in {p}: {set(invalid)}. These have been ignored in the output file.")
-        if output_path == "":
+        if output_path == None:
             new_path = p.parent.absolute()
         else:
             new_path = output_path
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--tolerance", type=float, help="When computing the F1_seg score, we need to check if both the absolute difference between the predicted onset and the ground-truth onset and the absolute difference between the predicted and ground-truth offsets are below a tolerance (in second)", default=0.01)
     parser.add_argument("-i", "--time_per_frame", type=float, help="The time bin size (in second) used when computing the F1_frame score.", default=0.001)
     parser.add_argument("-e", "--epsilon", type=float, help="The threshold epsilon_vote during the multi-trial majority voting when processing long audio files", default=0.02)
-    parser.add_argument("-o", "--output_path", type=str, help="Path to the output .json file. Defaults to the input directory.", default="")
+    parser.add_argument("-o", "--output_path", type=str, help="Path to the output .json file. Defaults to the input directory.", default=None)
     args = parser.parse_args()
 
     make_json(**vars(args))
