@@ -4,13 +4,16 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import Dict
 
 import librosa
-from utils import create_if_not_exists
+from numpyencoder import NumpyEncoder
+
 from datautils import get_audio_and_label_paths
 from model import WhisperSegmenterFast
 from train import evaluate
-from typing import Dict
+from utils import create_if_not_exists
+
 
 def evaluate_dataset(dataset_path: str, model_path: str, num_trials: int, consolidation_method: str = "clustering",
                       max_length: int = 448, num_beams: int = 4, batch_size: int = 8, **kwargs) -> Dict:
@@ -76,4 +79,4 @@ if __name__ == "__main__":
         out_path = args.output_dir
     out_name=os.path.join(out_path, datetime.now().strftime("%Y%m%d-%H%M%S") + f'_eval_{Path(args.model_path).stem}_{Path(args.dataset_path).stem}.txt')
     with open(out_name, "w") as f:
-        f.write(json.dumps(eval_res, indent=2))
+        f.write(json.dumps(eval_res, indent=2), cls=NumpyEncoder)
