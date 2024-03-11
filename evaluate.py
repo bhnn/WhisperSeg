@@ -6,18 +6,18 @@ from datetime import datetime
 from pathlib import Path
 
 import librosa
-
+from utils import create_if_not_exists
 from datautils import get_audio_and_label_paths
 from model import WhisperSegmenterFast
 from train import evaluate
 from typing import Dict
 
-def evaluate_dataset(dataset_folder: str, model_path: str, num_trials: int, consolidation_method: str = "clustering",
+def evaluate_dataset(dataset_path: str, model_path: str, num_trials: int, consolidation_method: str = "clustering",
                       max_length: int = 448, num_beams: int = 4, batch_size: int = 8 ) -> Dict:
     """Evaluate a trained WhisperSeg checkpoint on a dataset.
 
     Args:
-        dataset_folder (str): Path to the dataset to be evaluated
+        dataset_path (str): Path to the dataset to be evaluated
         model_path (str): Path to the trained model checkpoint
         num_trials (int): Number of trials
         consolidation_method (str, optional): Method used for consolidating the results of majority voting. Defaults to "clustering".
@@ -29,7 +29,7 @@ def evaluate_dataset(dataset_folder: str, model_path: str, num_trials: int, cons
         dict: Evaluation results
     """
     audio_list, label_list = [], []
-    audio_paths, label_paths = get_audio_and_label_paths(dataset_folder)
+    audio_paths, label_paths = get_audio_and_label_paths(dataset_path)
     for audio_path, label_path in zip(audio_paths, label_paths):
         label = json.load(open(label_path))
         audio, _ = librosa.load(audio_path, sr = label["sr"])
@@ -65,10 +65,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate a trained WhisperSeg checkpoint on a dataset.")
     parser.add_argument("-d", "--dataset_path", type=str, help="Path to the dataset to be evaluated", required=True)
     parser.add_argument("-m", "--model_path", type=str, help="Path to the trained model checkpoint", required=True)
+    parser.add_argument("-o", "--output_dir", type=str, help="Path to a directory where the output files will be saved", default=None)
     parser.add_argument("-n", "--num_trials", type=int, help="Number of trials", default=3)
     args = parser.parse_args()
 
     eval_res = evaluate_dataset(**vars(args))
-    out_name=os.path.join(os.getcwd(), datetime.now().strftime("%Y%m%d-%H%M%S") + f'_{Path(args.model_path).stem}_{Path(args.dataset_folder).stem}.txt')
+    if args.output_dir == None:
+        out_path = create_if_not_exists(os.path.join(os.getcwd(), "results"))
+    else:
+        out_path = args.output_dir
+    out_name=os.path.join(out_path, datetime.now().strftime("%Y%m%d-%H%M%S") + f'_eval_{Path(args.model_path).stem}_{Path(args.dataset_path).stem}.txt')
     with open(out_name, "w") as f:
         f.write(json.dumps(eval_res, indent=2))
