@@ -13,7 +13,7 @@ from train import evaluate
 from typing import Dict
 
 def evaluate_dataset(dataset_path: str, model_path: str, num_trials: int, consolidation_method: str = "clustering",
-                      max_length: int = 448, num_beams: int = 4, batch_size: int = 8 ) -> Dict:
+                      max_length: int = 448, num_beams: int = 4, batch_size: int = 8, **kwargs) -> Dict:
     """Evaluate a trained WhisperSeg checkpoint on a dataset.
 
     Args:
