@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Dict
 
 import librosa
-from numpyencoder import NumpyEncoder
 
 from datautils import get_audio_and_label_paths
 from model import WhisperSegmenterFast
@@ -51,12 +50,12 @@ def evaluate_dataset(dataset_path: str, model_path: str, num_trials: int, consol
             "F1": res["segment_wise"][5]
         },
         "frame_wise_scores": {
-            "N-true-positive": res["frame_wise"][0],
-            "N-positive-in-prediction": res["frame_wise"][1],
-            "N-positive-in-ground-truth": res["frame_wise"][2],
-            "precision": res["frame_wise"][3],
-            "recall": res["frame_wise"][4],
-            "F1": res["frame_wise"][5]
+            "N-true-positive": res["frame_wise"][0].item(),
+            "N-positive-in-prediction": res["frame_wise"][1].item(),
+            "N-positive-in-ground-truth": res["frame_wise"][2].item(),
+            "precision": res["frame_wise"][3].item(),
+            "recall": res["frame_wise"][4].item(),
+            "F1": res["frame_wise"][5].item(),
         },
     }
     return all_res
@@ -79,4 +78,4 @@ if __name__ == "__main__":
         out_path = args.output_dir
     out_name=os.path.join(out_path, datetime.now().strftime("%Y%m%d-%H%M%S") + f'_eval_{Path(args.model_path).stem}_{Path(args.dataset_path).stem}.txt')
     with open(out_name, "w") as f:
-        f.write(json.dumps(eval_res, indent=2), cls=NumpyEncoder)
+        f.write(json.dumps(eval_res, indent=2))
