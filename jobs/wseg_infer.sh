@@ -5,11 +5,15 @@
 #SBATCH -t 2-00:00:00
 #SBATCH -o /usr/users/bhenne/projects/whisperseg/slurm_files/job-%J.out
 
+module load anaconda3
+source activate wseg
+
 cd /local/eckerlab/
 
-if [ ! -d "Individual" ]
+if [ ! -d "wseg_data" ]
 then
-    tar xf /usr/users/vogg/Labelling/Lemurs/Individual_imgs.tar
+    mkdir wseg_data
+    cp -r /usr/users/bhenne/projects/whisperseg/data/lemur_snippet_1/train/ wseg_data
 fi
 
 source activate wseg
@@ -22,6 +26,3 @@ output_dir="/usr/users/bhenne/projects/whisperseg/results"
 python infer.py --data_dir "$dataset_path" --model_path "$model_path" --output_dir "$output_dir" 
 
 rm -rf /local/eckerlab/wseg_data
-
-
-#Amb,Cam,Cha,Che,Flo,Gen,Geo,Har,Her,Isa,Kai,Lat,Mya,Pal,Rab,Red,Sap,Taj
