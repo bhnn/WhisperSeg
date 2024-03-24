@@ -7,12 +7,24 @@ from pathlib import Path
 from typing import Dict
 
 import librosa
+import numpy as np
 
 from datautils import get_audio_and_label_paths
 from model import WhisperSegmenterFast
 from train import evaluate
 from utils import create_if_not_exists
 
+
+def convert_numpy_to_regular(data):
+     # numpy.int8/16/32/64, numpy.float8/16/32/64
+    if isinstance(data, np.generic):
+        return data.item()
+    elif isinstance(data, dict):
+        return {key: convert_numpy_to_regular(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [convert_numpy_to_regular(item) for item in data]
+    else:
+        return data
 
 def evaluate_dataset(dataset_path: str, model_path: str, num_trials: int, consolidation_method: str = "clustering",
                       max_length: int = 448, num_beams: int = 4, batch_size: int = 8, **kwargs) -> Dict:
@@ -50,15 +62,15 @@ def evaluate_dataset(dataset_path: str, model_path: str, num_trials: int, consol
             "F1": res["segment_wise"][5]
         },
         "frame_wise_scores": {
-            "N-true-positive": res["frame_wise"][0].item(),
-            "N-positive-in-prediction": res["frame_wise"][1].item(),
-            "N-positive-in-ground-truth": res["frame_wise"][2].item(),
-            "precision": res["frame_wise"][3].item(),
-            "recall": res["frame_wise"][4].item(),
-            "F1": res["frame_wise"][5].item(),
+            "N-true-positive": res["frame_wise"][0],
+            "N-positive-in-prediction": res["frame_wise"][1],
+            "N-positive-in-ground-truth": res["frame_wise"][2],
+            "precision": res["frame_wise"][3],
+            "recall": res["frame_wise"][4],
+            "F1": res["frame_wise"][5],
         },
     }
-    return all_res
+    return convert_numpy_to_regular(all_res)
 
 if __name__ == "__main__":
     logging.basicConfig()
@@ -68,6 +80,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--dataset_path", type=str, help="Path to the dataset to be evaluated", required=True)
     parser.add_argument("-m", "--model_path", type=str, help="Path to the trained model checkpoint", required=True)
     parser.add_argument("-o", "--output_dir", type=str, help="Path to a directory where the output files will be saved", default=None)
+    parser.add_argument("-i", "--identifier", type=str, help="Unique identifier used for the output file name in case model path and dataset name are not meaningful.", default=None)
     parser.add_argument("-n", "--num_trials", type=int, help="Number of trials", default=3)
     args = parser.parse_args()
 
@@ -76,6 +89,9 @@ if __name__ == "__main__":
         out_path = create_if_not_exists(os.path.join(os.getcwd(), "results"))
     else:
         out_path = args.output_dir
-    out_name=os.path.join(out_path, datetime.now().strftime("%Y%m%d-%H%M%S") + f'_eval_{Path(args.model_path).stem}_{Path(args.dataset_path).stem}.txt')
+    if args.identifier == None:
+        out_name=os.path.join(out_path, datetime.now().strftime("%Y%m%d-%H%M%S") + f'_eval_{Path(args.model_path).stem}_{Path(args.dataset_path).stem}.txt')
+    else:
+        out_name=os.path.join(out_path, datetime.now().strftime("%Y%m%d-%H%M%S") + f'_eval_{args.identifier}.txt')
     with open(out_name, "w") as f:
         f.write(json.dumps(eval_res, indent=2))
