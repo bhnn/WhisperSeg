@@ -1,22 +1,19 @@
-import os,sys,inspect
-from tqdm import tqdm
-import shutil
+import argparse
+import os
+import sys
+
 import numpy as np
-import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
-import time
-import shutil
-import json
 import wandb
-import argparse
-from audio_utils import SpecViewer, WhisperSegFeatureExtractor
-from utils import *
-from model import *
-from datautils import *
-import subprocess
-
+from tqdm import tqdm
 from transformers import AdamW, get_linear_schedule_with_warmup
+
+from convert_hf_to_ct2 import convert_hf_to_ct2
+from datautils import *
+from model import *
+from utils import *
+
 
 def train_iteration(batch):
     for key in batch:
@@ -127,7 +124,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    wandb.init( project = args.project, name = args.run_name )
+    wandb.init(project = args.project, name = args.run_name)
     wandb.define_metric("current_step")
     wandb.define_metric( "epoch", step_metric="current_step")
     wandb.define_metric( "train/loss", step_metric="current_step")
@@ -308,12 +305,8 @@ if __name__ == "__main__":
 
         hf_model_folder = args.model_folder+"/final_checkpoint"
         ct2_model_folder = hf_model_folder + "_ct2"
-        
-        subprocess.run([ "python", "convert_hf_to_ct2.py", 
-                         "--model", hf_model_folder,
-                         "--output_dir", ct2_model_folder,
-                         "--quantization", "float16"
-                       ])    
-    
-    print("All Done!")    
+
+        convert_hf_to_ct2(model=hf_model_folder, output_dir=ct2_model_folder, quantization="float16")
+
+    print("All Done!")
 
