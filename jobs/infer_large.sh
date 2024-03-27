@@ -13,7 +13,6 @@ base_dir="/usr/users/bhenne/projects/whisperseg"
 
 code_dir="$base_dir"
 script1="infer.py"
-script2="evaluate.py"
 data_dir="$base_dir/data/inference"
 model_dir="$base_dir/model/<model_name>/final_checkpoint_ct2"
 output_dir="$base_dir/results"
