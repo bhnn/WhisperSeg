@@ -25,7 +25,7 @@ work_dir="/local/eckerlab/wseg_data"
 job_dir="$work_dir/$(date +"%Y%m%d_%H%M%S")_${SLURM_JOB_ID}_${script1%.*}"
 
 epochs=6
-batch_size=1
+batch_size=4
 
 # Prevents excessive GPU memory reservation by Torch; enables batch sizes > 1 on v100s
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
