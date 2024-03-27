@@ -19,7 +19,7 @@ data_dir_fine="$base_dir/data/lemur/train-fine"
 model_dir_in="nccratliri/whisperseg-animal-vad"
 model_dir_out="$base_dir/model/$(date +"%Y%m%d_%H%M%S")_j${SLURM_JOB_ID}_wseg-large"
 output_dir="$base_dir/results"
-output_identifier=""
+output_identifier="large"
 
 work_dir="/local/eckerlab/wseg_data"
 job_dir="$work_dir/$(date +"%Y%m%d_%H%M%S")_${SLURM_JOB_ID}_${script1%.*}"
