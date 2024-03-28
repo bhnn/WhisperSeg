@@ -16,6 +16,7 @@ script1="train.py"
 script2="evaluate.py"
 data_dir_pre="$base_dir/data/lemur/train-pre"
 data_dir_fine="$base_dir/data/lemur/train-fine"
+data_dir_test="$base_dir/data/lemur/test"
 model_dir_in="nccratliri/whisperseg-base-animal-vad"
 model_dir_out="$base_dir/model/$(date +"%Y%m%d_%H%M%S")_j${SLURM_JOB_ID}_wseg-base"
 output_dir="$base_dir/results"
@@ -46,9 +47,7 @@ cleanup() {
 }
 
 # Trap SIGINT signal (Ctrl+C), ERR signal (error), and script termination
-trap 'cleanup 1' SIGINT
-trap 'cleanup 1' ERR
-trap 'cleanup 0' EXIT
+trap cleanup SIGINT ERR EXIT
 
 # Prepare compute node environment
 echo "[JOB] Preparing environment..."
@@ -58,10 +57,11 @@ source activate wseg
 
 # Create temporary job directory and copy data
 echo "[JOB] Moving data to cluster..."
-mkdir -p "$job_dir"/data/{pretrain,finetune}
+mkdir -p "$job_dir"/data/{pretrain,finetune,test}
 mkdir -p "$job_dir"/{pretrain_ckpt,finetune_ckpt}
 cp -r "$data_dir_pre"/* "$job_dir/data/pretrain"
 cp -r "$data_dir_fine"/* "$job_dir/data/finetune"
+cp -r "$data_dir_test"/* "$job_dir/data/test"
 
 # Pre-training, usually on multispecies wseg model
 echo "[JOB] Pretraining..."
@@ -86,7 +86,7 @@ python "$code_dir/$script1" \
 # Evaluation
 echo "[JOB] Evaluating..."
 python "$code_dir/$script2" \
-    -d "$job_dir/data/finetune" \
+    -d "$job_dir/data/test" \
     -m "$job_dir/finetune_ckpt/final_checkpoint_ct2" \
     -o "$output_dir" \
     -i "$output_identifier"

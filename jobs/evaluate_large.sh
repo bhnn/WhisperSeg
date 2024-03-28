@@ -12,13 +12,13 @@
 base_dir="/usr/users/bhenne/projects/whisperseg"
 
 code_dir="$base_dir"
-script1="evaluate.py"
-data_dir="$base_dir/<path-to-data>"
+script="evaluate.py"
+data_dir="$base_dir/<path-to-test-data>"
 model_dir="$base_dir/model/<model_name>/final_checkpoint_ct2"
 output_dir="$base_dir/results"
 
 work_dir="/local/eckerlab/wseg_data"
-job_dir="$work_dir/$(date +"%Y%m%d_%H%M%S")_${SLURM_JOB_ID}_${script1%.*}"
+job_dir="$work_dir/$(date +"%Y%m%d_%H%M%S")_${SLURM_JOB_ID}_${script%.*}"
 
 # Prevents excessive GPU memory reservation by Torch; enables batch sizes > 1 on v100s
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
@@ -35,13 +35,10 @@ cleanup() {
         fi
         unset PYTORCH_CUDA_ALLOC_CONF
     fi
-    exit $1
 }
 
 # Trap SIGINT signal (Ctrl+C), ERR signal (error), and script termination
-trap 'cleanup 1' SIGINT
-trap 'cleanup 1' ERR
-trap 'cleanup 0' EXIT
+trap cleanup SIGINT ERR EXIT
 
 # Prepare compute node environment
 echo "[JOB] Preparing environment..."
@@ -55,7 +52,7 @@ cp -r "$data_dir"/* "$job_dir/data"
 
 # Pre-training, usually on multispecies wseg model
 echo "[JOB] Evaluating checkpoint..."
-python "$code/$script" \
+python "$code_dir/$script" \
     --dataset_path "$job_dir/data" \
     --model_path "$model_dir" \
     --output_dir "$output_dir"
