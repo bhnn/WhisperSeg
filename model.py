@@ -96,6 +96,7 @@ def load_model( initial_model_path, total_spec_columns, dropout = 0.0):
             "mouse":"<|mouse|>",
             "marmoset":"<|marmoset|>",
             "human":"<|human|>",
+            "catta_lemur":"<|catta_lemur|>",
             ## set unknown for other species
             "unknown":"<|unknown|>",
             "animal":"<|animal|>"
