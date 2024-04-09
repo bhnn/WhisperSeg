@@ -8,13 +8,14 @@ from string import digits
 import yaml
 
 
-def make_json(file_path: str, config_path: str, species: str, sampling_rate: int, min_frequency: int, spec_time_step: 
+def make_json(file_path: str, config_path: str, convert_annotations: str, species: str, sampling_rate: int, min_frequency: int, spec_time_step: 
               float, tolerance: float, time_per_frame: float, epsilon: float, output_path: str = ""):
     """Converts Raven selection tables to .json files for WhisperSeg use
 
     Args:
         file_path (str): Path in which to recursively look for .txt files of selection tables
         config_path (str): Path to the config file detailing all annotation classes
+        convert_annotations (str): Whether to abstract annotations into their parent classes or leave them unchanged. 'None' uses all annotations as provided, 'parent' converts all child annotations into their parent class, 'animal' converts all annotations to "vocal".
         species (str): Species string to prepend to the labels
         sampling_rate (int): Sampling rate of the audio
         min_frequency (int): Minimum frequency for computing the Log Melspectrogram. Components below min_frequency will not be included in the input spectrogram.
@@ -31,6 +32,8 @@ def make_json(file_path: str, config_path: str, species: str, sampling_rate: int
     with open(config_path, 'r') as f:
         classes = yaml.safe_load(f)
         classes.pop('misc', None) # to remove labels such as 'fluff' and 'help'
+    if convert_annotations == "parent":
+        inverse_lookup = {vv: k for k, v in classes.items() for vv in v}
     for p in Path(file_path).rglob("*.txt"):
         logging.info(f"Found: {p}")
         with open(p, "r") as f:
@@ -40,7 +43,7 @@ def make_json(file_path: str, config_path: str, species: str, sampling_rate: int
             "onset": [],
             "offset": [],
             "cluster": [],
-            "species": species,
+            "species": species if convert_annotations != "animal" else "animal",
             "sr": sampling_rate,
             "min_frequency": min_frequency,
             "spec_time_step": spec_time_step,
@@ -55,12 +58,27 @@ def make_json(file_path: str, config_path: str, species: str, sampling_rate: int
         invalid = []
         for i in range(0, len(lines), 2):
             prefix = 1 if lines[i][-1][0] == '-' else 0
-            # count parent classe separately
             if lines[i][-1][prefix:] not in ['p1', 'p2', 'p3']:
                 label = lines[i][-1][prefix:].rstrip(digits)
             else:
                 label = lines[i][-1][prefix:]
-            if any(label in sublist for sublist in classes.values()):
+            if convert_annotations == "parent":
+                # strip numbers, then use inverse lookup dictionary to convert annotation into parent class
+                try:
+                    label = inverse_lookup[label]
+                except:
+                    # will fail if the label has the 'misc' parent class
+                    # will get weeded out later on
+                    pass
+            elif convert_annotations == "animal":
+                if any(label in sublist for sublist in classes.values()):
+                    # convert only valid labels
+                    label = "vocal"
+            elif convert_annotations != "none":
+                raise ValueError(f"Invalid value for convert_annotations: {convert_annotations}")
+            else:
+                pass
+            if any(label in sublist for sublist in classes.values()) or label == "vocal":
                 content["onset"].append(float(lines[i][3]))
                 content["offset"].append(float(lines[i][4]))
                 content["cluster"].append(label)
@@ -68,7 +86,7 @@ def make_json(file_path: str, config_path: str, species: str, sampling_rate: int
                 invalid.append(label)
         if len(invalid) > 0:
             logging.warning(f"Invalid labels found in {p}: {set(invalid)}. These have been ignored in the output file.")
-        if output_path == None:
+        if output_path == "":
             new_path = p.parent.absolute()
         else:
             new_path = output_path
@@ -91,6 +109,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Prepares Raven selection tables for WhisperSeg use: convert to .json and add some more info")
     parser.add_argument("-p", "--file_path", type=str, help="Path to .txt selection table files", required=True)
     parser.add_argument("-c", "--config_path", type=str, help="Path to the config file detailing all annotation classes", default='./config/classes.yaml')
+    parser.add_argument("-a", "--convert_annotations", choices=['none', 'parent', 'animal'], nargs="?", const="none", default="none", help="Whether to abstract annotations into their parent classes or leave them unchanged. \'None\' uses all annotations as provided, \'parent\' converts all child annotations into their parent class, \'animal\' converts all annotations to \"vocal\". Defaults to %(default)s.",)
     parser.add_argument("-s", "--species", type=str, help="The species in the audio, e.g., \"zebra_finch\" When adding new species, go to the WhisperSeg load_model() function in model.py, add a new pair of species_name:species_token to the species_codebook variable. E.g., \"catta_lemur\":\"<|catta_lemur|>\".", default='catta_lemur')
     parser.add_argument("-r", "--sampling_rate", type=int, help="The sampling rate that is used to load the audio. The audio file will be resampled to the sampling rate specified by this, regardless of the native sampling rate of the audio file.", default=48000)
     parser.add_argument("-f", "--min_frequency", type=int, help="The minimum frequency when computing the Log Melspectrogram. Frequency components below min_frequency will not be included in the input spectrogram.", default=0)
@@ -98,7 +117,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--tolerance", type=float, help="When computing the F1_seg score, we need to check if both the absolute difference between the predicted onset and the ground-truth onset and the absolute difference between the predicted and ground-truth offsets are below a tolerance (in second)", default=0.01)
     parser.add_argument("-i", "--time_per_frame", type=float, help="The time bin size (in second) used when computing the F1_frame score.", default=0.001)
     parser.add_argument("-e", "--epsilon", type=float, help="The threshold epsilon_vote during the multi-trial majority voting when processing long audio files", default=0.02)
-    parser.add_argument("-o", "--output_path", type=str, help="Path to the output .json file. Defaults to the input directory.", default=None)
+    parser.add_argument("-o", "--output_path", type=str, help="Path to the output .json file. Defaults to the input directory.", default="")
     args = parser.parse_args()
 
     make_json(**vars(args))
