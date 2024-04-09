@@ -26,7 +26,8 @@ work_dir="/local/eckerlab/wseg_data"
 job_dir="$work_dir/$(date +"%Y%m%d_%H%M%S")_${SLURM_JOB_ID}_${script1%.*}"
 
 epochs=6
-batch_size=1
+batch_size=8
+wandb_notes="8x v100, bs${batch_size}, ep${epochs}"
 
 # Prevents excessive GPU memory reservation by Torch; enables batch sizes > 1 on v100s
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
@@ -71,7 +72,9 @@ python "$code_dir/$script1" \
     --model_folder "$job_dir/pretrain_ckpt" \
     --gpu_list $gpus \
     --max_num_epochs $epochs \
-    --batch_size $batch_size
+    --batch_size $batch_size \
+    --run_name $SLURM_JOB_ID-0 \
+    --run_notes "pretrain, ${wandb_notes}"
 
 # Fine-tuning
 echo "[JOB] Finetuning..."
@@ -81,7 +84,9 @@ python "$code_dir/$script1" \
     --model_folder "$job_dir/finetune_ckpt" \
     --gpu_list $gpus \
     --max_num_epochs $epochs \
-    --batch_size $batch_size
+    --batch_size $batch_size \
+    --run_name $SLURM_JOB_ID-1 \
+    --run_notes "finetune, ${wandb_notes}"
 
 # Evaluation
 echo "[JOB] Evaluating..."
