@@ -1,6 +1,7 @@
 model/
-result/
-data/datasets
+results/
+data/
+slurm_files/
 wandb/
 .python-version
 
