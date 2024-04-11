@@ -14,6 +14,7 @@ from convert_hf_to_ct2 import convert_hf_to_ct2
 from datautils import *
 from model import *
 from utils import *
+from utils.common import is_scheduled_job
 
 
 def train_iteration(batch):
@@ -34,8 +35,8 @@ def evaluate( audio_list, label_list, segmenter, batch_size, max_length, num_tri
 
     total_n_true_positive_segment_wise, total_n_positive_in_prediction_segment_wise, total_n_positive_in_label_segment_wise = 0,0,0
     total_n_true_positive_frame_wise, total_n_positive_in_prediction_frame_wise, total_n_positive_in_label_frame_wise = 0,0,0
-    
-    for audio, label in tqdm(zip(audio_list, label_list), total = len(audio_list)):        
+
+    for audio, label in tqdm(zip(audio_list, label_list), total = len(audio_list), desc = "evaluate()", disable=not is_scheduled_job()):
         prediction = segmenter.segment(  audio, sr = label["sr"],
                        min_frequency = label["min_frequency"],
                        spec_time_step = label["spec_time_step"],
@@ -221,7 +222,7 @@ if __name__ == "__main__":
     current_step = 0
 
     for epoch in range(args.max_num_epochs + 1):  # This +1 is to ensure current_step can reach args.max_num_iterations
-        for count, batch in enumerate( tqdm( training_dataloader ) ):
+        for count, batch in enumerate( tqdm( training_dataloader, desc='train()', disable=not is_scheduled_job()) ):
             training_loss_value_list.append( train_iteration(batch) )
             
             if scheduler is not None:

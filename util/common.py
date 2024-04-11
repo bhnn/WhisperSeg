@@ -1,6 +1,18 @@
+from os import environ
 from pathlib import Path
 from typing import Generator, List
 
+
+def is_scheduled_job() -> bool:
+    """
+    Check if this script is running in a scheduled SLURM environment. Interactive sessions will return False.
+
+    Returns:
+        bool: True if the script is running as a scheduled job, False otherwise
+    """
+    if environ.get("SLURM_JOB_ID", None) and environ.get("SLURM_JOB_NAME", None) != "bash":
+        return True
+    return False
 
 def get_flex_file_iterator(file_path: str, rglob_str: str = "*.txt") -> Generator[Path, None, None] | List[str] | None:
     """
