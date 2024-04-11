@@ -97,7 +97,7 @@ if __name__ == "__main__":
     parser.add_argument("--train_dataset_folder" )
     parser.add_argument("--n_device", type = int, default = 1 )
     parser.add_argument("--gpu_list", type = int, nargs = "+", default = None )
-    parser.add_argument("--project", default = "whisperseg-multi-species" )
+    parser.add_argument("--project", default = "wseg-lemur" )
     parser.add_argument("--run_name", default = None )
     parser.add_argument("--run_notes", default = None )
     parser.add_argument("--print_every", type = int, default = 0 )
