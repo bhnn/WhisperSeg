@@ -132,7 +132,6 @@ if __name__ == "__main__":
         notes=args.run_notes,
         dir=args.wandb_dir,
     )
-    
     wandb.define_metric("current_step")
     wandb.define_metric( "epoch", step_metric="current_step")
     wandb.define_metric( "train/loss", step_metric="current_step")
@@ -226,7 +225,7 @@ if __name__ == "__main__":
     model.train() 
     training_loss_value_list = []
     val_score_history = []
-    eary_stop = False
+    early_stop = False
     current_step = 0
 
     for epoch in range(args.max_num_epochs + 1):  # This +1 is to ensure current_step can reach args.max_num_iterations
@@ -283,15 +282,15 @@ if __name__ == "__main__":
                 if len( val_score_history ) >= 3 and \
                    val_score_history[-1][1] < val_score_history[-2][1] and \
                    val_score_history[-2][1] < val_score_history[-3][1]:
-                    eary_stop = True
+                    early_stop = True
             
-            if current_step >= args.max_num_iterations or eary_stop :
+            if current_step >= args.max_num_iterations or early_stop :
                 if not os.path.exists( args.model_folder+"/checkpoint-%d"%(current_step) ):
                     model.eval()
                     save_model( model, tokenizer, current_step, args.model_folder, args.max_to_keep )
                 break
 
-        if current_step >= args.max_num_iterations or eary_stop :
+        if current_step >= args.max_num_iterations or early_stop :
             break   
 
     best_checkpoint_batch_number = None
