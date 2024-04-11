@@ -4,12 +4,12 @@ from collections import defaultdict
 from pathlib import Path
 from string import digits
 from typing import List
-
+from common import get_flex_file_iterator
 import yaml
 
 
 def count(path: str) -> List[defaultdict]:
-    """Counts the number of annotations per label in all .txt files in a directory recursively
+    """Counts the number of annotations per label in all .txt files in a directory recursively, or in a single file if specified.
 
     Args:
         path (str): Path to the directory containing the .txt files
@@ -18,7 +18,7 @@ def count(path: str) -> List[defaultdict]:
         List[defaultdict]: List of dictionaries containing the number of annotations per label
     """
     dicts = []
-    for p in Path(path).rglob("*.txt"):
+    for p in get_flex_file_iterator(path):
         logging.info(f"Found: {p}")
         with open(p, "r") as f:
             # split standard raven selection table format into list of lists and drop the header
@@ -46,6 +46,7 @@ def sum_dicts(dicts: list, classes: dict) -> defaultdict:
 
     Returns:
         defaultdict: Dictionary containing the sum of all annotations per label
+        total1 (int): Total number of annotations
     """
     d = defaultdict(int)
     total1 = total2 = 0
@@ -101,7 +102,14 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Assembles statistics for Raven selection tables in directory recursively: number of annotations per label")
     parser.add_argument("-p", "--path", type=str, help="Path to directory in which to search for selection table .txt files", required=True)
+    parser.add_argument("-s", "--show_per_file", action="store_true", help="Show the number of annotations per label per file")
     parser.add_argument("-c", "--config-path", type=str, help="Path to the config file detailing all annotation classes", default='./config/classes.yaml')
     args = parser.parse_args()
 
-    annotation_statistics(**vars(args))
+    if args.show_per_file:
+        for p in get_flex_file_iterator(args.path):
+            print(f'- File {p} contains:')
+            annotation_statistics(p, args.config_path)
+            print()
+    else:
+        annotation_statistics(args.path, args.config_path)
