@@ -100,6 +100,7 @@ if __name__ == "__main__":
     parser.add_argument("--project", default = "wseg-lemur" )
     parser.add_argument("--run_name", default = None )
     parser.add_argument("--run_notes", default = None )
+    parser.add_argument("--wandb_dir", default=None)
     parser.add_argument("--print_every", type = int, default = 0 )
     parser.add_argument("--validate_every", type = int, default = None )
     parser.add_argument("--validate_per_epoch", type = int, default = 0 )
@@ -129,7 +130,9 @@ if __name__ == "__main__":
         project = args.project,
         name = args.run_name,
         notes=args.run_notes,
+        dir=args.wandb_dir,
     )
+    
     wandb.define_metric("current_step")
     wandb.define_metric( "epoch", step_metric="current_step")
     wandb.define_metric( "train/loss", step_metric="current_step")
