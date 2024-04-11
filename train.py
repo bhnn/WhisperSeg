@@ -28,15 +28,6 @@ def train_iteration(batch):
     scaler.step(optimizer)
     # optimizer.step()
     scaler.update()
-    
-    """ 
-    # normal version without float16 speedup
-    optimizer.zero_grad()
-    model_out = model( **batch )
-    loss = model_out.loss.mean()
-    loss.backward()    
-    optimizer.step()
-    """
     return loss.item()
 
 def evaluate( audio_list, label_list, segmenter, batch_size, max_length, num_trials, consolidation_method = "clustering", num_beams=4, target_cluster = None ):
