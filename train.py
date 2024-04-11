@@ -6,8 +6,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import wandb
+from torch.optim import AdamW
 from tqdm import tqdm
-from transformers import AdamW, get_linear_schedule_with_warmup
+from transformers import get_linear_schedule_with_warmup
 
 from convert_hf_to_ct2 import convert_hf_to_ct2
 from datautils import *
