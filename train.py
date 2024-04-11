@@ -222,7 +222,7 @@ if __name__ == "__main__":
     current_step = 0
 
     for epoch in range(args.max_num_epochs + 1):  # This +1 is to ensure current_step can reach args.max_num_iterations
-        for count, batch in enumerate( tqdm( training_dataloader, desc='train()', disable=not is_scheduled_job()) ):
+        for count, batch in enumerate( tqdm( training_dataloader, desc=f'epoch-{epoch:02}', disable=not is_scheduled_job()) ):
             training_loss_value_list.append( train_iteration(batch) )
             
             if scheduler is not None:
