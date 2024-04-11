@@ -13,8 +13,8 @@ from transformers import get_linear_schedule_with_warmup
 from convert_hf_to_ct2 import convert_hf_to_ct2
 from datautils import *
 from model import *
+from util.common import is_scheduled_job
 from utils import *
-from utils.common import is_scheduled_job
 
 
 def train_iteration(batch):
