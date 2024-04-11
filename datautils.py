@@ -1,12 +1,15 @@
-import os,sys,inspect
-import librosa
-import pandas as pd
-import numpy as np
-import threading
-from torch.utils.data import Dataset, DataLoader
-from copy import deepcopy
 import json
+import os
+import threading
+from copy import deepcopy
+
+import librosa
+import numpy as np
+from torch.utils.data import Dataset
+from tqdm import tqdm
+
 from audio_utils import WhisperSegFeatureExtractor
+from util.common import is_scheduled_job
 from utils import RATIO_DECODING_TIME_STEP_TO_SPEC_TIME_STEP
 
 
@@ -14,7 +17,7 @@ def get_audio_and_label_paths( folder ):
     wav_list = [ folder + "/" + fname for fname in os.listdir( folder ) if fname.endswith(".wav") ]
     audio_paths = []
     label_paths = []
-    for wav_name in wav_list:
+    for wav_name in tqdm(wav_list, desc="prep_data", disable=is_scheduled_job()):
         label_name = wav_name[:-4] + ".json"
         if os.path.exists(label_name):
             audio_paths.append( wav_name )
@@ -41,7 +44,7 @@ def load_audio_and_label( audio_path_list, label_path_list, thread_id, audio_dic
     local_audio_list = []
     local_label_list = []
     
-    for count, (audio_path, label_path) in enumerate(zip( audio_path_list, label_path_list )):
+    for audio_path, label_path in tqdm(zip(audio_path_list, label_path_list), desc="load_data", disable=is_scheduled_job()):
         label = json.load(open( label_path ))
         y, _ = librosa.load( audio_path, sr = label["sr"] )
                 
@@ -66,16 +69,9 @@ def load_audio_and_label( audio_path_list, label_path_list, thread_id, audio_dic
         } )
         local_label_list.append( label )
 
-        if count % 10 == 0:
-            progress = count / len(audio_path_list)
-            print("|%s%s|progress: %.2f %%"%( "-" * (int( progress * 20 )), " "*( 20- int( progress * 20 )), progress*100 ), end = "\r", flush=True)
-    
-    progress = 1.0
-    print("|%s%s|progress: %.2f %%"%( "-" * (int( progress * 20 )), " "*( 20- int( progress * 20 )), progress*100 ), end = "\r", flush=True)
-    
     audio_dict[thread_id] = local_audio_list
     label_dict[thread_id] = local_label_list
-    
+
 def load_data(audio_path_list, label_path_list, cluster_codebook = None, n_threads = 1 ):
     samples_per_thread = int(np.ceil( len(audio_path_list) / n_threads ))
     audio_dict = {}
