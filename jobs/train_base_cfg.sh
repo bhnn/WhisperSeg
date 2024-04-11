@@ -32,6 +32,7 @@ output_identifier="base_cfg${cfg}"
 
 work_dir="/local/eckerlab/wseg_data"
 job_dir="$work_dir/$(date +"%Y%m%d_%H%M%S")_${SLURM_JOB_ID}_${script1%.*}"
+wandb_dir="/local/jobs/$SLURM_JOB_ID"
 
 epochs=6
 batch_size=4
@@ -81,7 +82,8 @@ python "$code_dir/$script1" \
     --max_num_epochs $epochs \
     --batch_size $batch_size \
     --run_name $SLURM_JOB_ID-0 \
-    --run_notes "pretrain, ${wandb_notes}"
+    --run_notes "pretrain, ${wandb_notes}" \
+    --wandb_dir "$wandb_dir"
 
 # Fine-tuning
 echo "[JOB] Finetuning..."
@@ -93,7 +95,8 @@ python "$code_dir/$script1" \
     --max_num_epochs $epochs \
     --batch_size $batch_size \
     --run_name $SLURM_JOB_ID-1 \
-    --run_notes "finetune, ${wandb_notes}"
+    --run_notes "finetune, ${wandb_notes}" \
+    --wandb_dir "$wandb_dir"
 
 # Evaluation
 echo "[JOB] Evaluating..."
