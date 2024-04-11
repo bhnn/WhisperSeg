@@ -100,7 +100,7 @@ if __name__ == "__main__":
     parser.add_argument("--project", default = "whisperseg-multi-species" )
     parser.add_argument("--run_name", default = None )
     parser.add_argument("--run_notes", default = None )
-    parser.add_argument("--print_every", type = int, default = 100 )
+    parser.add_argument("--print_every", type = int, default = 0 )
     parser.add_argument("--validate_every", type = int, default = None )
     parser.add_argument("--validate_per_epoch", type = int, default = 0 )
     parser.add_argument("--save_every", type = int, default = None )
@@ -235,7 +235,7 @@ if __name__ == "__main__":
                 
             current_step += 1
 
-            if current_step % args.print_every == 0:
+            if args.print_every > 0 and current_step % args.print_every == 0:
                 print("Epoch: %d, current_step: %d, learning rate: %f, Loss: %.4f"%( epoch, current_step, get_lr(optimizer)[0], np.mean(training_loss_value_list)) )
                 wandb.log(
                     {
