@@ -45,6 +45,7 @@ cleanup() {
         fi
         unset PYTORCH_CUDA_ALLOC_CONF
     fi
+    exit 1
 }
 
 # Trap SIGINT signal (Ctrl+C), ERR signal (error), and script termination
