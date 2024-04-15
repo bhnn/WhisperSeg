@@ -44,7 +44,7 @@ def load_audio_and_label( audio_path_list, label_path_list, thread_id, audio_dic
     local_audio_list = []
     local_label_list = []
     
-    for audio_path, label_path in tqdm(zip(audio_path_list, label_path_list), desc="load_data", disable=is_scheduled_job()):
+    for audio_path, label_path in tqdm(zip(audio_path_list, label_path_list), desc="load_data", disable=is_scheduled_job(), leave=False):
         label = json.load(open( label_path ))
         y, _ = librosa.load( audio_path, sr = label["sr"] )
                 
