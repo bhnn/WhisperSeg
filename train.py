@@ -98,7 +98,7 @@ if __name__ == "__main__":
     parser.add_argument("--run_name", default = None )
     parser.add_argument("--run_notes", default = None )
     parser.add_argument("--wandb_dir", default=None)
-    parser.add_argument("--print_every", type = int, default = 0 )
+    parser.add_argument("--update_every", type = int, default = 100 )
     parser.add_argument("--validate_every", type = int, default = None )
     parser.add_argument("--validate_per_epoch", type = int, default = 0 )
     parser.add_argument("--save_every", type = int, default = None )
@@ -234,8 +234,7 @@ if __name__ == "__main__":
                 
             current_step += 1
 
-            if args.print_every > 0 and current_step % args.print_every == 0:
-                print("Epoch: %d, current_step: %d, learning rate: %f, Loss: %.4f"%( epoch, current_step, get_lr(optimizer)[0], np.mean(training_loss_value_list)) )
+            if args.update_every > 0 and current_step % args.update_every == 0:
                 wandb.log(
                     {
                         "current_step":current_step,
@@ -249,13 +248,9 @@ if __name__ == "__main__":
 
             if ( args.validate_every is not None and current_step % args.validate_every == 0 ) or \
                 ( args.validate_per_epoch and count == len(training_dataloader) - 1 ):
-                print("Start validation ...")
                 model.eval()
                 ## in the validation set, set the num_trails to 1
                 eval_res = evaluate( audio_list_val, label_list_val, segmenter, args.batch_size, args.max_length, num_trials =1, consolidation_method = None, num_beams=1, target_cluster = None )
-         
-                print("Epoch: %d, current_step: %d, validation segment F1 score: %.2f, frame F1 score: %.2f"%( epoch, current_step, 
-                                                                      eval_res["segment_wise"][-1], eval_res["frame_wise"][-1] ))
                 wandb.log(
                     {
                         "current_step":current_step,
