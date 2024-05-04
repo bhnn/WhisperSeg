@@ -38,7 +38,10 @@ def make_json(file_path: str, config_path: str, convert_annotations: str, filter
         exit(1)
     if convert_annotations == "none":
         # no conversion, just use the labels as they are
-        transition_matrix = {vv: vv for v in classes.values() for vv in v}
+        if filter:
+            transition_matrix = {vv: vv for v in classes.values() for vv in v if vv in filter}
+        else:
+            transition_matrix = {vv: vv for v in classes.values() for vv in v}
     elif convert_annotations == "parent":
         # replace all self-lookups with parent class, "inverse lookup" basically
         transition_matrix = {vv: k.lower() for k, v in classes.items() for vv in v}
