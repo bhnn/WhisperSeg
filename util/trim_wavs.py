@@ -26,7 +26,6 @@ def trim_wavs(file_path: str, safety_padding: float = 1.0) -> None:
         onset = json_data['onset'][0]
         offset = json_data['offset'][-1]
 
-        # Load .wav file
         sampling_rate, data = wavfile.read(p)
         max_frames = len(data)
 
