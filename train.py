@@ -271,7 +271,7 @@ if __name__ == "__main__":
                 save_model( model, tokenizer, current_step, args.model_folder, args.max_to_keep )
                 model.train()
 
-            early_stop = esh.check(val_score_history[-1][1])
+            early_stop = esh.check(val_score_history[-1][1]) if len(val_score_history) > 0 else False
             
             if current_step >= args.max_num_iterations or early_stop :
                 if not os.path.exists( args.model_folder+"/checkpoint-%d"%(current_step) ):
