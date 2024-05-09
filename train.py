@@ -228,7 +228,7 @@ if __name__ == "__main__":
     current_step = 0
 
     for epoch in range(args.max_num_epochs + 1):  # This +1 is to ensure current_step can reach args.max_num_iterations
-        for count, batch in enumerate( tqdm( training_dataloader, desc=f'epoch-{epoch:02}', disable=is_scheduled_job()) ):
+        for count, batch in enumerate( tqdm( training_dataloader, desc=f'epoch-{epoch:03}', disable=is_scheduled_job()) ):
             training_loss_value_list.append( train_iteration(batch) )
             
             if scheduler is not None:
@@ -262,7 +262,7 @@ if __name__ == "__main__":
                     }
                 )    
                 val_score_history.append( ( current_step, ( eval_res["segment_wise"][-1] + eval_res["frame_wise"][-1] ) * 0.5 ) )
-                
+                early_stop = esh.check(val_score_history[-1][1]) if len(val_score_history) > 0 else False
                 model.train()
             
             if ( args.save_every is not None and current_step % args.save_every == 0 ) or \
@@ -271,8 +271,6 @@ if __name__ == "__main__":
                 save_model( model, tokenizer, current_step, args.model_folder, args.max_to_keep )
                 model.train()
 
-            early_stop = esh.check(val_score_history[-1][1]) if len(val_score_history) > 0 else False
-            
             if current_step >= args.max_num_iterations or early_stop :
                 if not os.path.exists( args.model_folder+"/checkpoint-%d"%(current_step) ):
                     model.eval()
