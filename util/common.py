@@ -90,7 +90,7 @@ class EarlyStopHandler:
         """
         self.patience = patience
         self.counter = 0
-        self.max_validation_score = float('inf')
+        self.max_validation_score = 0
 
     def check(self, validation_score: float) -> bool:
         """Check if the training should be stopped early based on the validation loss.
