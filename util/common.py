@@ -79,3 +79,17 @@ def compute_spec_time_step(sampling_rate: int, l_hop: float) -> float:
         float: The computed value
     """
     return l_hop / sampling_rate
+
+def is_early_stop(validation_score_history: List[tuple], patience: int) -> bool:
+    """Checks if all [patience] recent scores are smaller or equal to the last score. If so, returns True to signify the run should stop early. Requires at least [patience] + 1 score values.
+
+    Args:
+        validation_score_history (List[tuple]): List of validation scores
+        patience (int): Number of epochs to wait before stopping
+
+    Returns:
+        bool: True if the training should be stopped, False otherwise
+    """
+    if len(validation_score_history) < patience + 1:
+         return False # not enough history yet
+    return all(score <= validation_score_history[-1][1] for _, score in validation_score_history[-patience:]) # -patience-1?

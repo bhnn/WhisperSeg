@@ -17,7 +17,7 @@ from datautils import (VocalSegDataset, get_audio_and_label_paths,
                        get_cluster_codebook, load_data,
                        slice_audios_and_labels, train_val_split)
 from model import WhisperSegmenterForEval, load_model, save_model
-from util.common import is_scheduled_job
+from util.common import is_early_stop, is_scheduled_job
 from utils import *
 
 
@@ -106,6 +106,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_num_epochs", type = int, default = 3 )
     parser.add_argument("--max_num_iterations", type = int, default = None )
     parser.add_argument("--val_ratio", type = float, default = 0.0 )
+    parser.add_argument("--patience", type = int, default = 10, help="If the validation score does not improve for [patience] epochs, stop training.")
     
     parser.add_argument("--max_length", type = int, default = 100 )
     parser.add_argument("--total_spec_columns", type = int, default = 1000 )
@@ -269,12 +270,7 @@ if __name__ == "__main__":
                 save_model( model, tokenizer, current_step, args.model_folder, args.max_to_keep )
                 model.train()
 
-            if current_step >= 0.5 * args.max_num_iterations: ## training has been half-way done
-                ## validation score keep decreasing for 2 validation steps
-                if len( val_score_history ) >= 3 and \
-                   val_score_history[-1][1] < val_score_history[-2][1] and \
-                   val_score_history[-2][1] < val_score_history[-3][1]:
-                    early_stop = True
+            early_stop = is_early_stop(val_score_history, patience = args.patience)
             
             if current_step >= args.max_num_iterations or early_stop :
                 if not os.path.exists( args.model_folder+"/checkpoint-%d"%(current_step) ):
