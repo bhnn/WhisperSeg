@@ -17,7 +17,7 @@ from datautils import (VocalSegDataset, get_audio_and_label_paths,
                        get_cluster_codebook, load_data,
                        slice_audios_and_labels, train_val_split)
 from model import WhisperSegmenterForEval, load_model, save_model
-from util.common import is_early_stop, is_scheduled_job
+from util.common import EarlyStopHandler, is_scheduled_job
 from utils import *
 
 
@@ -223,6 +223,7 @@ if __name__ == "__main__":
     model.train() 
     training_loss_value_list = []
     val_score_history = []
+    esh = EarlyStopHandler(patience = args.patience)
     early_stop = False
     current_step = 0
 
@@ -270,7 +271,7 @@ if __name__ == "__main__":
                 save_model( model, tokenizer, current_step, args.model_folder, args.max_to_keep )
                 model.train()
 
-            early_stop = is_early_stop(val_score_history, patience = args.patience)
+            early_stop = esh.check(val_score_history[-1][1])
             
             if current_step >= args.max_num_iterations or early_stop :
                 if not os.path.exists( args.model_folder+"/checkpoint-%d"%(current_step) ):

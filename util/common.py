@@ -80,16 +80,32 @@ def compute_spec_time_step(sampling_rate: int, l_hop: float) -> float:
     """
     return l_hop / sampling_rate
 
-def is_early_stop(validation_score_history: List[tuple], patience: int) -> bool:
-    """Checks if all [patience] recent scores are smaller or equal to the last score. If so, returns True to signify the run should stop early. Requires at least [patience] + 1 score values.
+class EarlyStopHandler:
+    # adapted from: https://stackoverflow.com/a/73704579
+    def __init__(self, patience: int = 10) -> None:
+        """Initializes the EarlyStopHandler object.
 
-    Args:
-        validation_score_history (List[tuple]): List of validation scores
-        patience (int): Number of epochs to wait before stopping
+        Args:
+            patience (int, optional): The amount of epochs without improvement before stopping. Defaults to 10.
+        """
+        self.patience = patience
+        self.counter = 0
+        self.max_validation_score = float('inf')
 
-    Returns:
-        bool: True if the training should be stopped, False otherwise
-    """
-    if len(validation_score_history) < patience + 1:
-         return False # not enough history yet
-    return all(score <= validation_score_history[-1][1] for _, score in validation_score_history[-patience:]) # -patience-1?
+    def check(self, validation_score: float) -> bool:
+        """Check if the training should be stopped early based on the validation loss.
+
+        Args:
+            validation_score (float): Validation score
+
+        Returns:
+            bool: True if the training should be stopped, False otherwise
+        """
+        if validation_score > self.max_validation_score:
+            self.max_validation_score = validation_score
+            self.counter = 0
+        elif validation_score < self.max_validation_score:
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+        return False
