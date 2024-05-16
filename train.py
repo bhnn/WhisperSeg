@@ -18,6 +18,7 @@ from datautils import (VocalSegDataset, get_audio_and_label_paths,
                        slice_audios_and_labels, train_val_split)
 from model import WhisperSegmenterForEval, load_model, save_model
 from util.common import EarlyStopHandler, is_scheduled_job
+from util.confusion_framewise import confusion_matrix_framewise
 from utils import *
 
 
@@ -35,7 +36,7 @@ def train_iteration(batch):
     scaler.update()
     return loss.item()
 
-def evaluate( audio_list, label_list, segmenter, batch_size, max_length, num_trials, consolidation_method = "clustering", num_beams=4, target_cluster = None ):
+def evaluate( audio_list, label_list, segmenter, batch_size, max_length, num_trials, consolidation_method = "clustering", num_beams=4, target_cluster = None, confusion_matrix: bool = False):
 
     total_n_true_positive_segment_wise, total_n_positive_in_prediction_segment_wise, total_n_positive_in_label_segment_wise = 0,0,0
     total_n_true_positive_frame_wise, total_n_positive_in_prediction_frame_wise, total_n_positive_in_label_frame_wise = 0,0,0
@@ -54,7 +55,8 @@ def evaluate( audio_list, label_list, segmenter, batch_size, max_length, num_tri
                        num_beams = num_beams
                  )
 
-        
+        if confusion_matrix:
+            confusion_matrix_framewise(prediction, label, None, label["time_per_frame_for_scoring"])
         TP, P_pred, P_label = segmenter.segment_score( prediction, label,  target_cluster = target_cluster, tolerance = label["tolerance"] )[:3]
         total_n_true_positive_segment_wise += TP
         total_n_positive_in_prediction_segment_wise += P_pred
