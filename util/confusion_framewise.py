@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix, precision_score, recall_score, f1_score
 
 
 def confusion_matrix_framewise(prediction, label, target_cluster = None, time_per_frame_for_scoring = 0.01 ):
@@ -37,40 +37,25 @@ def confusion_matrix_framewise(prediction, label, target_cluster = None, time_pe
         offset_pos = int(np.round( label_segments["offset"][idx] / time_per_frame_for_scoring ))
         frame_wise_label[onset_pos:offset_pos] = cluster_to_id_mapper[ label_segments["cluster"][idx] ]
 
-    # labels_alpha, labels_num = zip(*sorted(zip(cluster_to_id_mapper.keys(), cluster_to_id_mapper.values())))
-    labels_alpha = list(['#', *cluster_to_id_mapper.keys()])
-    labels_num = list([-1, cluster_to_id_mapper.values()])
-
-    # scaler = 1.5
-    # _ = plt.figure(figsize=(6.4 * scaler, 4.8 * scaler))
-    # cm = ConfusionMatrixDisplay.from_predictions(
-    #     y_true=frame_wise_label,
-    #     y_pred=frame_wise_prediction,
-    #     labels=labels_num,
-    #     display_labels=labels_alpha,
-    #     # values_format='.2g',
-    #     sample_weight=None,
-    #     normalize=None,
-    #     cmap='viridis',
-    #     xticks_rotation='horizontal',
-    # )
-    # plt.tight_layout()
-    # fig = plt.gcf()
-    # print(fig.get_size_inches())
+    # sort both numerical and alphabetical labels by the alphabetical order
+    labels_alpha, labels_num = zip(*sorted(zip(cluster_to_id_mapper.keys(), cluster_to_id_mapper.values())))
+    labels_alpha = list(['#', *labels_alpha])
+    labels_num = list([-1, *labels_num])
 
     # seaborn todo: add black line color to colorbar
     cm = confusion_matrix(
         y_true=frame_wise_label,
         y_pred=frame_wise_prediction,
+        labels=labels_num,
         sample_weight=None,
-        normalize=None,
+        normalize='all',
     )
-    scaler = 3
+    scaler = 2
     _, ax = plt.subplots(1, 1, figsize=(6.4 * scaler, 4.8 * scaler))
-    cm_annotations = [['' if x == 0 else f'{x}' for x in row] for row in cm]
+    cm_annotations = [['' if x == 0 else f'{x:.3f}' for x in row] for row in cm]
     sns.heatmap(
         data=cm,
-        vmax=5000,
+        # vmax=5000,
         cmap='viridis',
         annot=cm_annotations,
         fmt='',
@@ -81,9 +66,21 @@ def confusion_matrix_framewise(prediction, label, target_cluster = None, time_pe
         yticklabels=labels_alpha,
         ax=ax,
     )
+    # plot adjustments
     plt.yticks(rotation=0)
     ax.set_xlabel('Predicted label')
     ax.set_ylabel('True label')
-    print(labels_alpha)
-    print(classification_report(frame_wise_label, frame_wise_prediction, zero_division=np.nan))
+
+    # print(classification_report(frame_wise_label, frame_wise_prediction, zero_division=np.nan, target_names=labels_alpha))
+    # print(classification_report(frame_wise_label, frame_wise_prediction, zero_division=np.nan, labels=labels_num, target_names=labels_alpha))
+    # print(precision_score(y_true=frame_wise_label, y_pred=frame_wise_prediction, average='macro', zero_division=0))
+    # print(precision_score(y_true=frame_wise_label, y_pred=frame_wise_prediction, average='weighted', zero_division=0))
+    # plt.show()
     plt.savefig('/usr/users/bhenne/projects/whisperseg/confusion_framewise.png', format='png', dpi=400, bbox_inches='tight')
+    # plt.savefig(r'D:\work\whisperseg\confusion_framewise.png', format='png', dpi=400, bbox_inches='tight')
+
+if __name__ == "__main__":
+    import json
+    prediction = json.load(open(r'd:\Dropbox\pred.txt'))
+    label = json.load(open(r'd:\Dropbox\true.txt'))
+    confusion_matrix_framewise(prediction, label, time_per_frame_for_scoring=0.001)
