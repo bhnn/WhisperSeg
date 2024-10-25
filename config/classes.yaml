@@ -1,4 +1,5 @@
 P1: ['p1', 'b', 'ca', 'c', 'cl', 'cm', 'e', 'ht', 'l', 'm', 'n', 'o', 'pc', 'sh', 'ud']
 P2: ['p2', 'd', 'hw', 'h', 'mo', 'pu', 'up', 'w']
 P3: ['p3', 'ho', 'hu', 'se', 'sk', 'sq', 't', 'wa', 'y']
+vocal: ['vocal']
 misc: ['fluff', 'help']
