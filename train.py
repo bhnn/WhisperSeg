@@ -1,6 +1,8 @@
 import argparse
+import json
 import os
 import sys
+from datetime import datetime
 from glob import glob
 
 import numpy as np
@@ -36,7 +38,7 @@ def train_iteration(batch):
     scaler.update()
     return loss.item()
 
-def evaluate( audio_list, label_list, segmenter, batch_size, max_length, num_trials, consolidation_method = "clustering", num_beams=4, target_cluster = None, confusion_matrix: bool = False):
+def evaluate( audio_list, label_list, segmenter, batch_size, max_length, num_trials, consolidation_method = "clustering", num_beams=4, target_cluster = None, confusion_matrix: str = None, save_cm_data: str = None):
 
     total_n_true_positive_segment_wise, total_n_positive_in_prediction_segment_wise, total_n_positive_in_label_segment_wise = 0,0,0
     total_n_true_positive_frame_wise, total_n_positive_in_prediction_frame_wise, total_n_positive_in_label_frame_wise = 0,0,0
@@ -54,9 +56,12 @@ def evaluate( audio_list, label_list, segmenter, batch_size, max_length, num_tri
                        num_trials = num_trials,
                        num_beams = num_beams
                  )
-
-        if confusion_matrix:
-            confusion_matrix_framewise(prediction, label, None, label["time_per_frame_for_scoring"])
+        # dirty workaround to pass the job-id in `confusion_matrix` and `save_cm_data
+        if confusion_matrix != None:
+            confusion_matrix_framewise(prediction, label, None, label["time_per_frame_for_scoring"], name=confusion_matrix)
+        if save_cm_data != None:
+            with open(f'/usr/users/bhenne/projects/whisperseg/results/{save_cm_data}.cmraw', "w") as fp:
+                json.dump({'prediction': prediction, 'label': label}, fp, indent=2)
         TP, P_pred, P_label = segmenter.segment_score( prediction, label,  target_cluster = target_cluster, tolerance = label["tolerance"] )[:3]
         total_n_true_positive_segment_wise += TP
         total_n_positive_in_prediction_segment_wise += P_pred
@@ -99,6 +104,7 @@ if __name__ == "__main__":
     parser.add_argument("--project", default = "wseg-lemur" )
     parser.add_argument("--run_name", default = None )
     parser.add_argument("--run_notes", default = None )
+    parser.add_argument("--run_tags", default = None, nargs='+')
     parser.add_argument("--wandb_dir", default=None)
     parser.add_argument("--update_every", type = int, default = 100 )
     parser.add_argument("--validate_every", type = int, default = None )
@@ -127,9 +133,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     wandb.init(
-        project = args.project,
-        name = args.run_name,
+        project=args.project,
+        name=args.run_name,
         notes=args.run_notes,
+        tags=args.run_tags,
         dir=args.wandb_dir,
     )
     wandb.define_metric("current_step")
