@@ -9,18 +9,18 @@ dest_dir="$base_dir"/data/lemur_setup
 dest_name="aug_curated"
 
 # prep
-rm -f data/data_backup/finetune/* data/data_backup/pretrain/*
-cp $source_dir/source/original_7/* data/data_backup/finetune
-cp $source_dir/source/original_7/* data/data_backup/pretrain
-cp $source_dir/source/aug_3_curated/* data/data_backup/finetune
-cp $source_dir/source/aug_3_curated/* data/data_backup/pretrain
+rm -f $source_dir/finetune/* $source_dir/pretrain/*
+cp $source_dir/source/original_7/* $source_dir/finetune
+cp $source_dir/source/original_7/* $source_dir/pretrain
+cp $source_dir/source/aug_3_curated/* $source_dir/finetune
+cp $source_dir/source/aug_3_curated/* $source_dir/pretrain
 
-python util/clean_tables.py -p data/data_backup/finetune
-python util/clean_tables.py -p data/data_backup/pretrain
-python util/make_json.py -p data/data_backup/finetune -t 0.5 -d 2.5 -o data/data_backup/finetune -a animal_filter_replace -f mo
-python util/make_json.py -p data/data_backup/finetune -t 0.5 -d 2.5 -o data/data_backup/pretrain -a animal
-python util/trim_wavs.py -p data/data_backup/finetune
-python util/trim_wavs.py -p data/data_backup/pretrain
+python util/clean_tables.py -p $source_dir/finetune
+python util/clean_tables.py -p $source_dir/pretrain
+python util/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/finetune -a animal_filter_replace -f mo
+python util/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/pretrain -a animal
+python util/trim_wavs.py -p $source_dir/finetune
+python util/trim_wavs.py -p $source_dir/pretrain
 
 files=(
     "\(2019_03_15-12_02_11\)_CSWMUW240241_0000_first*"
