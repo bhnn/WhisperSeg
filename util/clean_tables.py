@@ -2,6 +2,8 @@ import argparse
 from collections import defaultdict
 from string import digits
 
+from common import get_flex_file_iterator
+
 
 def clean_tables(path: str, remove_fluff: bool = False):
     """Cleans up Raven selection tables: renumbers IDs, numbers labels
@@ -45,4 +47,8 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--fluff", action="store_true", help="Whether to remove 'fluff' annotations (default: False)", dest="remove_fluff")
     args = parser.parse_args()
 
-    clean_tables(**vars(args))
+    c = 0
+    for p in get_flex_file_iterator(args.path, rglob_str="*.txt"):
+        clean_tables(path=p)
+        c += 1
+    print(f"Cleaned up {c} files.")
