@@ -1,35 +1,45 @@
 #!/bin/bash
 
 # SLURM directives
-#SBATCH --gres=gpu:rtx5000:4
-#SBATCH --mem 128G
-#SBATCH -c 16
+#SBATCH --gres=gpu:RTX5000:1
+#SBATCH --mem 64G
+#SBATCH -c 8
 #SBATCH -p gpu
 #SBATCH -t 2-00:00:00
 #SBATCH -o /usr/users/bhenne/projects/whisperseg/slurm_files/job-%J.out
 
+# Check if the number of arguments passed is not exactly 1 or if config is empty
+if [ "$#" -ne 1 ] || [ -z "$1" ]; then
+    echo "Usage: $0 <config_set> ([1-7], determines which config of data is used)"
+    echo "Error: Config-set argument is empty or missing."
+    exit 1
+fi
+
 # Definitions
+cfg="$1"
 base_dir="/usr/users/bhenne/projects/whisperseg"
 
 code_dir="$base_dir"
+experiment_dir="labels_baseline"
 script1="train.py"
 script2="evaluate.py"
-data_dir_pre="$base_dir/data/lemur/train-pre"
-data_dir_fine="$base_dir/data/lemur/train-fine"
-data_dir_test="$base_dir/data/lemur/test"
+data_tar="$base_dir/data/lemur_tar/lemur_data_cfg${cfg}.tar"
+label_tar="$base_dir/data/lemur_tar/$experiment_dir/lemur_labels_cfg${cfg}.tar"
 model_dir_in="nccratliri/whisperseg-base-animal-vad"
 model_dir_out="$base_dir/model/$(date +"%Y%m%d_%H%M%S")_j${SLURM_JOB_ID}_wseg-base"
 output_dir="$base_dir/results"
-output_identifier=""
+output_identifier="base_j${SLURM_JOB_ID}"
 
 work_dir="/local/eckerlab/wseg_data"
 job_dir="$work_dir/$(date +"%Y%m%d_%H%M%S")_${SLURM_JOB_ID}_${script1%.*}"
-wandb_dir="/local/jobs/$SLURM_JOB_ID"
+wandb_dir=$job_dir
 
-epochs=6
-batch_size=4
-wandb_notes="4x rtx5000, bs${batch_size}, ep${epochs}"
-
+# Model hyperparameter
+project_name="wseg-lemur-results"
+epochs=100
+patience=10
+val_ratio=0.2
+wandb_notes="baseline cfg${cfg}, rtx5000:1, ep${epochs}, vratio${val_ratio}, pat${patience}"
 # Prevents excessive GPU memory reservation by Torch; enables batch sizes > 1 on v100s
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
@@ -59,48 +69,57 @@ source activate wseg
 
 # Create temporary job directory and copy data
 echo "[JOB] Moving data to cluster..."
-mkdir -p "$job_dir"/data/{pretrain,finetune,test}
-mkdir -p "$job_dir"/{pretrain_ckpt,finetune_ckpt}
-cp -r "$data_dir_pre"/* "$job_dir/data/pretrain"
-cp -r "$data_dir_fine"/* "$job_dir/data/finetune"
-cp -r "$data_dir_test"/* "$job_dir/data/test"
+mkdir -p "$job_dir"/{pretrain_ckpt,finetune_ckpt,wandb} # $job_dir itself + 3 others
+# tarballs contain directory structure for pretrain/finetune/test split
+tar -xf "$data_tar" -C "$job_dir"
+tar -xf "$label_tar" -C "$job_dir"
 
 # Pre-training, usually on multispecies wseg model
 echo "[JOB] Pretraining..."
 python "$code_dir/$script1" \
     --initial_model_path "$model_dir_in" \
-    --train_dataset_folder "$job_dir/data/pretrain" \
+    --train_dataset_folder "$job_dir/pretrain" \
     --model_folder "$job_dir/pretrain_ckpt" \
     --gpu_list $gpus \
     --max_num_epochs $epochs \
-    --batch_size $batch_size \
+    --project $project_name \
     --run_name $SLURM_JOB_ID-0 \
     --run_notes "pretrain, ${wandb_notes}" \
-    --wandb_dir "$wandb_dir"
+    --wandb_dir "$wandb_dir" \
+    --validate_per_epoch 1 \
+    --val_ratio $val_ratio \
+    --save_per_epoch 1 \
+    --patience $patience
 
 # Fine-tuning
 echo "[JOB] Finetuning..."
 python "$code_dir/$script1" \
     --initial_model_path "$job_dir/pretrain_ckpt/final_checkpoint" \
-    --train_dataset_folder "$job_dir/data/finetune" \
+    --train_dataset_folder "$job_dir/finetune" \
     --model_folder "$job_dir/finetune_ckpt" \
     --gpu_list $gpus \
     --max_num_epochs $epochs \
-    --batch_size $batch_size \
+    --project $project_name \
     --run_name $SLURM_JOB_ID-1 \
     --run_notes "finetune, ${wandb_notes}" \
-    --wandb_dir "$wandb_dir"
+    --wandb_dir "$wandb_dir" \
+    --validate_per_epoch 1 \
+    --val_ratio $val_ratio \
+    --save_per_epoch 1 \
+    --patience $patience
 
 # Evaluation
 echo "[JOB] Evaluating..."
 python "$code_dir/$script2" \
-    -d "$job_dir/data/test" \
+    -d "$job_dir/test" \
     -m "$job_dir/finetune_ckpt/final_checkpoint_ct2" \
     -o "$output_dir" \
     -i "$output_identifier"
 
 # Move finished model to target job_dir
-echo "[JOB] Moving trained model..."
-mv "$job_dir/finetune_ckpt" "$model_dir_out"
+if [ -n "$(ls -A "$job_dir/finetune_ckpt")" ]; then
+    echo "[JOB] Moving trained model..."
+    mv "$job_dir/finetune_ckpt" "$model_dir_out"
+fi
 
 # Clean up (already handled by trap)
