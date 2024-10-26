@@ -84,7 +84,7 @@ python "$code_dir/$script1" \
     --max_num_epochs $epochs \
     --project $project_name \
     --run_name $SLURM_JOB_ID-0 \
-    --run_notes "pretrain, ${wandb_notes}" \
+    --run_notes "$wandb_notes" \
     --wandb_dir "$wandb_dir" \
     --validate_per_epoch 1 \
     --val_ratio $val_ratio \
@@ -101,7 +101,7 @@ python "$code_dir/$script1" \
     --max_num_epochs $epochs \
     --project $project_name \
     --run_name $SLURM_JOB_ID-1 \
-    --run_notes "finetune, ${wandb_notes}" \
+    --run_notes "$wandb_notes" \
     --wandb_dir "$wandb_dir" \
     --validate_per_epoch 1 \
     --val_ratio $val_ratio \
