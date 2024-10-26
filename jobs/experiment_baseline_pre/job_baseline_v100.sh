@@ -26,7 +26,7 @@ code_dir="$base_dir"
 data_tar="$base_dir/data/lemur_tar/labels_baseline_pre/lemur_data_cfg${cfg}.tar"
 label_tar="$base_dir/data/lemur_tar/labels_baseline_pre/lemur_labels_cfg${cfg}.tar"
 model_dir_in="nccratliri/whisperseg-animal-vad"
-model_dir_out="$base_dir/model/$(date +"%Y%m%d_%H%M%S")_j${SLURM_JOB_ID}_wseg-large"
+model_dir_out="$base_dir/model/$(date +"%Y%m%d_%H%M%S")_j${SLURM_JOB_ID}_wseg-large_baseline-pre"
 output_dir="$base_dir/results"
 output_identifier="large_j${SLURM_JOB_ID}"
 
