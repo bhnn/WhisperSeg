@@ -44,18 +44,19 @@ def evaluate( audio_list, label_list, segmenter, batch_size, max_length, num_tri
     total_n_true_positive_frame_wise, total_n_positive_in_prediction_frame_wise, total_n_positive_in_label_frame_wise = 0,0,0
 
     for audio, label in tqdm(zip(audio_list, label_list), total = len(audio_list), desc = "evaluate()", disable=is_scheduled_job()):
-        prediction = segmenter.segment(  audio, sr = label["sr"],
-                       min_frequency = label["min_frequency"],
-                       spec_time_step = label["spec_time_step"],
-                       min_segment_length = label["min_segment_length"],
-                       eps = label["eps"],  ## for DBSCAN clustering
-                       time_per_frame_for_voting = label.get("time_per_frame_for_voting", 0.001), ## for bin-wise voting, by default it is not used
-                       consolidation_method = consolidation_method,
-                       max_length = max_length, 
-                       batch_size = batch_size, 
-                       num_trials = num_trials,
-                       num_beams = num_beams
-                 )
+        prediction = segmenter.segment(
+            audio, sr = label["sr"],
+            min_frequency = label["min_frequency"],
+            spec_time_step = label["spec_time_step"],
+            min_segment_length = label["min_segment_length"],
+            eps = label["eps"],  ## for DBSCAN clustering
+            time_per_frame_for_voting = label.get("time_per_frame_for_voting", 0.001), ## for bin-wise voting, by default it is not used
+            consolidation_method = consolidation_method,
+            max_length = max_length, 
+            batch_size = batch_size, 
+            num_trials = num_trials,
+            num_beams = num_beams
+        )
         # dirty workaround to pass the job-id in `confusion_matrix` and `save_cm_data
         if confusion_matrix != None:
             confusion_matrix_framewise(prediction, label, None, label["time_per_frame_for_scoring"], name=confusion_matrix)
