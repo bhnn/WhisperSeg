@@ -15,12 +15,12 @@ cp $source_dir/source/original_7/* $source_dir/pretrain
 cp $source_dir/source/aug_3_auto/* $source_dir/finetune
 cp $source_dir/source/aug_3_auto/* $source_dir/pretrain
 
-python util/clean_tables.py -p $source_dir/finetune
-python util/clean_tables.py -p $source_dir/pretrain
-python util/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/finetune -a animal_filter_replace -f mo
-python util/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/pretrain -a animal
-python util/trim_wavs.py -p $source_dir/finetune
-python util/trim_wavs.py -p $source_dir/pretrain
+python $source_dir/clean_tables.py -p $source_dir/finetune
+python $source_dir/clean_tables.py -p $source_dir/pretrain
+python $source_dir/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/finetune -a animal_filter_replace -f mo
+python $source_dir/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/pretrain -a animal
+python $source_dir/trim_wavs.py -p $source_dir/finetune
+python $source_dir/trim_wavs.py -p $source_dir/pretrain
 
 files=(
     "\(2019_03_15-12_02_11\)_CSWMUW240241_0000_first*"
