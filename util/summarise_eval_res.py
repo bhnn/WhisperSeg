@@ -30,8 +30,8 @@ def summarise_res(file: Path) -> List:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Summarises result .txt files in specified directory that fall between `from` and `to` job IDs.")
     parser.add_argument("-p", "--path", required=True, help="Path to directory containing result files from evaluate.py")
-    parser.add_argument("--from_id", required=True, help="Job ID to start with, inclusive")
-    parser.add_argument("--to_id", required=True, help="Job ID to end with, inclusive")
+    parser.add_argument("-a", "--from_id", required=True, help="Job ID to start with, inclusive")
+    parser.add_argument("-z", "--to_id", required=True, help="Job ID to end with, inclusive")
     args = parser.parse_args()
 
     print("<job_id> <segment_precision> <segment_recall> <segment_f1> <framewise_precision> <framewise_recall> <framewise_f1>")
