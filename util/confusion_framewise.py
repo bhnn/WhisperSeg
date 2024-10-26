@@ -1,10 +1,22 @@
+import argparse
+import json
+from datetime import datetime
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from sklearn.metrics import classification_report, confusion_matrix, precision_score, recall_score, f1_score
+from sklearn.metrics import classification_report, confusion_matrix
 
 
-def confusion_matrix_framewise(prediction, label, target_cluster = None, time_per_frame_for_scoring = 0.01 ):
+def confusion_matrix_framewise(prediction: np.ndarray, label: np.ndarray, time_per_frame_for_scoring = 0.01, name: str = None):
+    """Create a confusion matrix from frame-wise scores
+
+    Args:
+        prediction (np.ndarray): Numpy array containing predictions
+        label (np.ndarray): Numpy array containing labels
+        time_per_frame_for_scoring (float, optional): Bin-size for frame-wise scoring. Defaults to 0.01.
+        name (str, optional): Used to pass job information so each job creates cms with unique names. Defaults to None.
+    """
     prediction_segments = prediction
     label_segments = label
 
@@ -48,11 +60,11 @@ def confusion_matrix_framewise(prediction, label, target_cluster = None, time_pe
         y_pred=frame_wise_prediction,
         labels=labels_num,
         sample_weight=None,
-        normalize='all',
+        normalize=None,
     )
     scaler = 2
     _, ax = plt.subplots(1, 1, figsize=(6.4 * scaler, 4.8 * scaler))
-    cm_annotations = [['' if x == 0 else f'{x:.3f}' for x in row] for row in cm]
+    cm_annotations = [['' if x == 0 else f'{x:.0f}' for x in row] for row in cm]
     sns.heatmap(
         data=cm,
         # vmax=5000,
@@ -70,17 +82,21 @@ def confusion_matrix_framewise(prediction, label, target_cluster = None, time_pe
     plt.yticks(rotation=0)
     ax.set_xlabel('Predicted label')
     ax.set_ylabel('True label')
-
-    # print(classification_report(frame_wise_label, frame_wise_prediction, zero_division=np.nan, target_names=labels_alpha))
-    # print(classification_report(frame_wise_label, frame_wise_prediction, zero_division=np.nan, labels=labels_num, target_names=labels_alpha))
-    # print(precision_score(y_true=frame_wise_label, y_pred=frame_wise_prediction, average='macro', zero_division=0))
-    # print(precision_score(y_true=frame_wise_label, y_pred=frame_wise_prediction, average='weighted', zero_division=0))
-    # plt.show()
-    plt.savefig('/usr/users/bhenne/projects/whisperseg/confusion_framewise.png', format='png', dpi=400, bbox_inches='tight')
+    print(cm)
+    print(classification_report(frame_wise_label, frame_wise_prediction, zero_division=np.nan, labels=labels_num, target_names=labels_alpha))
+    if name != None:
+        plt.savefig(f'/usr/users/bhenne/projects/whisperseg/results/{name}_cm_framewise.png', format='png', dpi=400, bbox_inches='tight')
+    else:
+        current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+        plt.savefig(f'/usr/users/bhenne/projects/whisperseg/results/{current_time}_cm_framewise.png', format='png', dpi=400, bbox_inches='tight')
     # plt.savefig(r'D:\work\whisperseg\confusion_framewise.png', format='png', dpi=400, bbox_inches='tight')
 
 if __name__ == "__main__":
-    import json
-    prediction = json.load(open(r'd:\Dropbox\pred.txt'))
-    label = json.load(open(r'd:\Dropbox\true.txt'))
+    parser = argparse.ArgumentParser(description="Create a confusion matrix from frame-wise scores loaded from a file")
+    parser.add_argument("--prediction_file", type=str, help="Path to file containing predictions", required=True)
+    parser.add_argument("--label_file", type=str, help="Path to file containing labels", required=True)
+    args = parser.parse_args()
+
+    prediction = json.load(open(args.prediction_file))
+    label = json.load(open(args.label_file))
     confusion_matrix_framewise(prediction, label, time_per_frame_for_scoring=0.001)
