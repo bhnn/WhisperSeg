@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # SLURM directives
-#SBATCH --gres=gpu:V100:1
-#SBATCH --mem 128G
-#SBATCH -c 24
+#SBATCH --gres=gpu:RTX5000:1
+#SBATCH --mem 64G
+#SBATCH -c 8
 #SBATCH -p gpu
 #SBATCH -t 2-00:00:00
 #SBATCH -o /usr/users/bhenne/projects/whisperseg/slurm_files/job-%J.out
