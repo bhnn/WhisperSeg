@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Union
 
 import librosa
 import numpy as np
@@ -15,9 +15,13 @@ from train import evaluate
 from utils import create_if_not_exists
 
 
-def convert_numpy_to_regular(data):
-     # numpy.int8/16/32/64, numpy.float8/16/32/64
-    if isinstance(data, np.generic):
+def convert_numpy_to_regular(data: Union[np.generic, List, Dict]):
+    """Convert numpy types to regular types.
+
+    Args:
+        data (Union[np.generic, List, Dict]): Data to be converted
+    """
+    if isinstance(data, np.generic): # numpy.int8/16/32/64, numpy.float8/16/32/64
         return data.item()
     elif isinstance(data, dict):
         return {key: convert_numpy_to_regular(value) for key, value in data.items()}
@@ -45,13 +49,18 @@ def evaluate_dataset(dataset_path: str, model_path: str, num_trials: int, consol
     audio_list, label_list = [], []
     audio_paths, label_paths = get_audio_and_label_paths(dataset_path)
     for audio_path, label_path in zip(audio_paths, label_paths):
-        label = json.load(open(label_path))
+        with open(label_path, 'r') as f:
+            label = json.load(f)
         audio, _ = librosa.load(audio_path, sr = label["sr"])
         audio_list.append(audio)
         label_list.append(label) 
 
     segmenter = WhisperSegmenterFast(model_path = model_path,  device = "cuda")
-    res = evaluate(audio_list, label_list, segmenter, batch_size, max_length, num_trials, consolidation_method, num_beams, target_cluster = None)
+    if kwargs['identifier']:
+        cm_name = raw_data_name = kwargs['identifier']
+    else:
+        cm_name = raw_data_name = None
+    res = evaluate(audio_list, label_list, segmenter, batch_size, max_length, num_trials, consolidation_method, num_beams, target_cluster = None, confusion_matrix=cm_name, save_cm_data=raw_data_name)
     all_res = {
         "segment_wise_scores": {
             "N-true-positive": res["segment_wise"][0],
