@@ -1,6 +1,6 @@
+archive/
 model/
-results/
-data/
+results/*
 slurm_files/
 wandb/
 .python-version
