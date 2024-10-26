@@ -21,8 +21,6 @@ python $base_dir/util/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $sou
 python $base_dir/util/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/pretrain -a animal_filter_drop -f w up mo h hw d hu wa t
 python $base_dir/util/trim_wavs.py -p $source_dir/finetune
 python $base_dir/util/trim_wavs.py -p $source_dir/pretrain
-python $base_dir/util/balance_cuts.py -p $source_dir/finetune -s 30 -o $source_dir/finetune
-python $base_dir/util/balance_cuts.py -p $source_dir/pretrain -s 30 -o $source_dir/pretrain
 
 files=(
     "\(2019_03_15-12_02_11\)_CSWMUW240241_0000_first*"
