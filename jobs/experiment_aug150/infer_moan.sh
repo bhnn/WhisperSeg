@@ -13,9 +13,9 @@ base_dir="/usr/users/bhenne/projects/whisperseg"
 
 code_dir="$base_dir"
 script="infer.py"
-data_dir="$base_dir/data/inference/finetune"
-model_dir="$base_dir/model/20240702_012658_j537476_wseg-base/final_checkpoint_ct2"
-output_dir="$base_dir/data/inference/finetune"
+data_dir="$base_dir/data/<...>"
+model_dir="$base_dir/model/<...>/final_checkpoint_ct2"
+output_dir="$base_dir/data/results"
 
 majority_voting_trials=3
 

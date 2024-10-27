@@ -8,6 +8,10 @@ source_dir="$base_dir"/data/data_backup
 dest_dir="$base_dir"/data/lemur_setup
 dest_name="baseline_pre"
 
+# create destination directories if they don't exist
+mkdir -p "$base_dir/data/lemur_tar/data_${dest_name}"
+mkdir -p "$base_dir/data/lemur_tar/labels_${dest_name}"
+
 # prep
 # tolerance 0.01s, duration 2.5s
 rm -f $source_dir/finetune/* $source_dir/pretrain/*

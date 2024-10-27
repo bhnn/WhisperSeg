@@ -16,10 +16,11 @@ experiment_dir="labels_moan_other"
 
 code_dir="$base_dir"
 script="evaluate.py"
-data_tar="$base_dir/data/lemur_tar/lemur_data_cfg${cfg}.tar"
-label_tar="$base_dir/data/lemur_tar/$experiment_dir/lemur_labels_cfg${cfg}_moan_other.tar"
+data_tar="$base_dir/data/lemur_tar/data_moan_other/lemur_data_cfg${cfg}_moan_other.tar"
+label_tar="$base_dir/data/lemur_tar/labels_moan_other/lemur_labels_cfg${cfg}_moan_other.tar"
 model_dir="$base_dir/model/$model_name/final_checkpoint_ct2"
 output_dir="$base_dir/results"
+output_identifier="base_j${SLURM_JOB_ID}_moan_other"
 
 work_dir="/local/eckerlab/wseg_data"
 job_dir="$work_dir/$(date +"%Y%m%d_%H%M%S")_${SLURM_JOB_ID}_${script%.*}"
@@ -43,7 +44,7 @@ cleanup() {
 }
 
 # Trap SIGINT signal (Ctrl+C), ERR signal (error), and script termination
-# trap cleanup SIGINT ERR EXIT
+trap cleanup SIGINT ERR EXIT
 
 # Prepare compute node environment
 echo "[JOB] Preparing environment..."
@@ -57,13 +58,12 @@ mkdir -p "$job_dir"
 tar -xf "$data_tar" -C "$job_dir"
 tar -xf "$label_tar" -C "$job_dir"
 
-exit 1
-
 # Pre-training, usually on multispecies wseg model
 echo "[JOB] Evaluating checkpoint..."
 python "$code_dir/$script" \
     --dataset_path "$job_dir/test" \
     --model_path "$model_dir" \
-    --output_dir "$output_dir"
+    --output_dir "$output_dir" \
+    --identifier "$output_identifier"
 
 # Clean up (already handled by trap)

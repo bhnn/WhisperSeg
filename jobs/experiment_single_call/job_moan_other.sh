@@ -21,11 +21,10 @@ cfg="$1"
 base_dir="/usr/users/bhenne/projects/whisperseg"
 
 code_dir="$base_dir"
-experiment_dir="labels_moan_other"
 script1="train.py"
 script2="evaluate.py"
-data_tar="$base_dir/data/lemur_tar/$experiment_dir/data_cfg${cfg}.tar"
-label_tar="$base_dir/data/lemur_tar/$experiment_dir/labels_cfg${cfg}_moan_other.tar"
+data_tar="$base_dir/data/lemur_tar/data_moan_other/lemur_data_cfg${cfg}_moan_other.tar"
+label_tar="$base_dir/data/lemur_tar/labels_moan_other/lemur_labels_cfg${cfg}_moan_other.tar"
 model_dir_in="nccratliri/whisperseg-base-animal-vad"
 model_dir_out="$base_dir/model/$(date +"%Y%m%d_%H%M%S")_j${SLURM_JOB_ID}_wseg-base_moan_other"
 output_dir="$base_dir/results"
@@ -77,7 +76,7 @@ mkdir -p "$job_dir"/{pretrain_ckpt,finetune_ckpt,wandb} # $job_dir itself + 3 ot
 tar -xf "$data_tar" -C "$job_dir"
 tar -xf "$label_tar" -C "$job_dir"
 
-# Pre-training, usually on multispecies wseg model
+# Pre-training
 echo "[JOB] Pretraining..."
 python "$code_dir/$script1" \
     --initial_model_path "$model_dir_in" \

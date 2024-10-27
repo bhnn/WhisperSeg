@@ -24,8 +24,8 @@ code_dir="$base_dir"
 experiment_dir="labels_pre_parent"
 script1="train.py"
 script2="evaluate.py"
-data_tar="$base_dir/data/lemur_tar/lemur_data_cfg${cfg}.tar"
-label_tar="$base_dir/data/lemur_tar/$experiment_dir/lemur_labels_cfg${cfg}_pre_parent.tar"
+data_tar="$base_dir/data/lemur_tar/data_pre_parent/lemur_data_cfg${cfg}_pre_parent.tar"
+label_tar="$base_dir/data/lemur_tar/labels_pre_parent/lemur_labels_cfg${cfg}_pre_parent.tar"
 model_dir_in="nccratliri/whisperseg-base-animal-vad"
 model_dir_out="$base_dir/model/$(date +"%Y%m%d_%H%M%S")_j${SLURM_JOB_ID}_wseg-base_pre_parent"
 output_dir="$base_dir/results"
@@ -76,7 +76,6 @@ mkdir -p "$job_dir"/{pretrain_ckpt,pretrain2_ckpt,finetune_ckpt,wandb} # $job_di
 # tarballs contain directory structure for pretrain/finetune/test split
 tar -xf "$data_tar" -C "$job_dir"
 tar -xf "$label_tar" -C "$job_dir"
-cp $job_dir/pretrain/*.wav "$job_dir/pretrain2/"
 
 # Pre-training, usually on multispecies wseg model
 echo "[JOB] Pretraining 1..."

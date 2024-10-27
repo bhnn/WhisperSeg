@@ -8,6 +8,10 @@ source_dir="$base_dir"/data/data_backup
 dest_dir="$base_dir"/data/lemur_setup
 dest_name="aug_unsupervised"
 
+# create destination directories if they don't exist
+mkdir -p "$base_dir/data/lemur_tar/data_${dest_name}"
+mkdir -p "$base_dir/data/lemur_tar/labels_${dest_name}"
+
 # prep
 rm -f $source_dir/finetune/* $source_dir/pretrain/*
 cp $source_dir/source/original_7/* $source_dir/finetune
@@ -15,12 +19,12 @@ cp $source_dir/source/original_7/* $source_dir/pretrain
 cp $source_dir/source/aug_3_auto/* $source_dir/finetune
 cp $source_dir/source/aug_3_auto/* $source_dir/pretrain
 
-python $source_dir/clean_tables.py -p $source_dir/finetune
-python $source_dir/clean_tables.py -p $source_dir/pretrain
-python $source_dir/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/finetune -a animal_filter_replace -f mo
-python $source_dir/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/pretrain -a animal
-python $source_dir/trim_wavs.py -p $source_dir/finetune
-python $source_dir/trim_wavs.py -p $source_dir/pretrain
+python $base_dir/util/clean_tables.py -p $source_dir/finetune
+python $base_dir/util/clean_tables.py -p $source_dir/pretrain
+python $base_dir/util/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/finetune -a animal_filter_replace -f mo
+python $base_dir/util/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/pretrain -a animal
+python $base_dir/util/trim_wavs.py -p $source_dir/finetune
+python $base_dir/util/trim_wavs.py -p $source_dir/pretrain
 
 files=(
     "\(2019_03_15-12_02_11\)_CSWMUW240241_0000_first*"

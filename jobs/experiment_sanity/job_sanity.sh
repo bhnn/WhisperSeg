@@ -21,11 +21,10 @@ cfg="$1"
 base_dir="/usr/users/bhenne/projects/whisperseg"
 
 code_dir="$base_dir"
-experiment_dir="labels_baseline_post"
 script1="train.py"
 script2="evaluate.py"
-data_tar="$base_dir/data/lemur_tar/$experiment_dir/data_cfg${cfg}.tar"
-label_tar="$base_dir/data/lemur_tar/$experiment_dir/labels_cfg${cfg}_sanity.tar"
+data_tar="$base_dir/data/lemur_tar/data_baseline_pre/lemur_data_cfg${cfg}_baseline_pre.tar"
+label_tar="$base_dir/data/lemur_tar/labels_clipd/lemur_labels_cfg${cfg}_clipd25.tar"
 model_dir_in="nccratliri/whisperseg-base-animal-vad"
 model_dir_out="$base_dir/model/$(date +"%Y%m%d_%H%M%S")_j${SLURM_JOB_ID}_wseg-base_sanity"
 output_dir="$base_dir/results"
@@ -76,9 +75,9 @@ mkdir -p "$job_dir"/{pretrain_ckpt,finetune_ckpt,wandb} # $job_dir itself + 3 ot
 # tarballs contain directory structure for pretrain/finetune/test split
 tar -xf "$data_tar" -C "$job_dir"
 tar -xf "$label_tar" -C "$job_dir"
-# move test files to pretrain and finetune, then test on finetune later
-cp $job_dir/test/*.wav $job_dir/pretrain
-mv $job_dir/test/*.wav $job_dir/finetune
+# move test files to pretrain and finetune, then test on training data to see if learning is possible
+cp $job_dir/test/* $job_dir/pretrain
+mv $job_dir/test/* $job_dir/finetune
 
 # Pre-training, usually on multispecies wseg model
 echo "[JOB] Pretraining..."

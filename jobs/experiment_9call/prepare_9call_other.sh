@@ -8,6 +8,10 @@ source_dir="$base_dir"/data/data_backup
 dest_dir="$base_dir"/data/lemur_setup
 dest_name="9call_other"
 
+# create destination directories if they don't exist
+mkdir -p "$base_dir/data/lemur_tar/data_${dest_name}"
+mkdir -p "$base_dir/data/lemur_tar/labels_${dest_name}"
+
 # prep
 # tolerance 0.5s, duration 2.5s
 # targets: wail, upturn, moan, hmm, halfwail, downturn, huh, wave, trill (merged), remaining calls as vocal. pretrain, all vocal
@@ -17,8 +21,8 @@ cp $source_dir/source/original_7/* $source_dir/pretrain
 
 python $base_dir/util/clean_tables.py -p $source_dir/finetune
 python $base_dir/util/clean_tables.py -p $source_dir/pretrain
-python $base_dir/util/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/finetune -f w up mo h hw d hu wa t --merge_targets
-python $base_dir/util/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/pretrain -a animal_filter_drop -f w up mo h hw d hu wa t
+python $base_dir/util/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/finetune -a animal_filter_replace -f w up mo h hw d hu wa t --merge_targets
+python $base_dir/util/make_json.py -p $source_dir/finetune -t 0.5 -d 2.5 -o $source_dir/pretrain -a animal
 python $base_dir/util/trim_wavs.py -p $source_dir/finetune
 python $base_dir/util/trim_wavs.py -p $source_dir/pretrain
 

@@ -8,6 +8,9 @@ source_dir="$base_dir"/data/data_backup
 dest_dir="$base_dir"/data/lemur_setup
 dest_name="clipd"
 
+# create destination directories if they don't exist
+mkdir -p "$base_dir/data/lemur_tar/labels_${dest_name}"
+
 for clipd_str in 2.5 5.0 7.5 30.0
 do
     # prep
@@ -49,29 +52,9 @@ do
         # create tar
         cd "$dest_dir"
         tar -cf "lemur_labels_cfg${cfg_count}_${dest_name}.tar" *
-        
-        mv "$dest_dir"/lemur_labels* "$base_dir/data/lemur_tar/labels_${dest_name}${clipd_str}"
+
+        clipd_str_no_dot=$(echo "$clipd_str" | sed 's/\.//g')
+        mv "$dest_dir"/lemur_labels* "$base_dir/data/lemur_tar/labels_${dest_name}${clipd_str_no_dot}"
         ((cfg_count++))
     done
-done
-
-# clip duration only affects labels, so we can safely use the last state of the generated data
-cfg_count=1
-for test_file in "${files[@]}"; do
-    # reset lemur_setup to default
-    rm -f "$dest_dir"/pretrain/*
-    rm -f "$dest_dir"/finetune/*
-    rm -f "$dest_dir"/test/*
-    cp "$source_dir"/pretrain/*.wav "$dest_dir"/pretrain/
-    cp "$source_dir"/finetune/*.wav "$dest_dir"/finetune/
-
-    # split up test file
-    mv "$dest_dir"/pretrain/$test_file "$dest_dir"/test
-    mv "$dest_dir"/finetune/$test_file "$dest_dir"/test
-
-    # create tar
-    cd "$dest_dir"
-    tar -cf "lemur_data_cfg${cfg_count}_${dest_name}.tar" *
-    mv "$dest_dir"/lemur_data* "$base_dir/data/lemur_tar/data_${dest_name}"
-    ((cfg_count++))
 done

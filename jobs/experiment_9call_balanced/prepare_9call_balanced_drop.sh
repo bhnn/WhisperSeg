@@ -8,7 +8,13 @@ source_dir="$base_dir"/data/data_backup
 dest_dir="$base_dir"/data/lemur_setup
 dest_name="9call_balanced_drop"
 
+# create destination directories if they don't exist
+mkdir -p "$base_dir/data/lemur_tar/data_${dest_name}"
+mkdir -p "$base_dir/data/lemur_tar/labels_${dest_name}"
+
 # prep
+# tolerance 0.5s, duration 2.5s
+# targets: wail, upturn, moan, hmm, halfwail, downturn, huh, wave, trill (merged), drop remaining calls. pretrain, all targets as vocal
 rm -f $source_dir/finetune/* $source_dir/pretrain/*
 cp $source_dir/source/original_7/* $source_dir/finetune
 cp $source_dir/source/original_7/* $source_dir/pretrain

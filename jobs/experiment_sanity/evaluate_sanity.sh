@@ -11,12 +11,11 @@
 # Definitions
 base_dir="/usr/users/bhenne/projects/whisperseg"
 model_name="20240703_164557_j568021_wseg-base_sanity"; cfg="5"
-experiment_dir="labels_sanity"
 
 code_dir="$base_dir"
 script="evaluate.py"
-data_tar="$base_dir/data/lemur_tar/lemur_data_cfg${cfg}.tar"
-label_tar="$base_dir/data/lemur_tar/$experiment_dir/lemur_labels_cfg${cfg}_sanity.tar"
+data_tar="$base_dir/data/lemur_tar/data_baseline_pre/lemur_data_cfg${cfg}_baseline_pre.tar"
+label_tar="$base_dir/data/lemur_tar/labels_clipd/lemur_labels_cfg${cfg}_clipd25.tar"
 model_dir="$base_dir/model/$model_name/final_checkpoint_ct2"
 output_dir="$base_dir/results"
 
@@ -55,8 +54,9 @@ mkdir -p "$job_dir"
 # tarballs contain directory structure for pretrain/finetune/test split
 tar -xf "$data_tar" -C "$job_dir"
 tar -xf "$label_tar" -C "$job_dir"
-cp $job_dir/test/*.wav $job_dir/pretrain
-mv $job_dir/test/*.wav $job_dir/finetune
+# Move test data to pretrain and finetune, then test on training set to see if learning is possible
+cp $job_dir/test/* $job_dir/pretrain
+mv $job_dir/test/* $job_dir/finetune
 
 # Pre-training, usually on multispecies wseg model
 echo "[JOB] Evaluating checkpoint..."

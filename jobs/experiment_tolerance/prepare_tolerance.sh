@@ -6,7 +6,10 @@ source activate wseg
 base_dir="/usr/users/bhenne/projects/whisperseg"
 source_dir="$base_dir"/data/data_backup
 dest_dir="$base_dir"/data/lemur_setup
-dest_name="tol"
+dest_name="tolerance"
+
+# create destination directories if they don't exist
+mkdir -p "$base_dir/data/lemur_tar/labels_${dest_name}"
 
 for tol_str in 0.01 0.05 0.1 0.15 0.2 0.5 0.75 1.0 2.0
 do
@@ -50,28 +53,8 @@ do
         cd "$dest_dir"
         tar -cf "lemur_labels_cfg${cfg_count}_${dest_name}.tar" *
         
-        mv "$dest_dir"/lemur_labels* "$base_dir/data/lemur_tar/labels_${dest_name}${tol_str}"
+        tol_str_no_dot=$(echo "$tol_str" | sed 's/\.//g')
+        mv "$dest_dir"/lemur_labels* "$base_dir/data/lemur_tar/labels_${dest_name}${tol_str_no_dot}"
         ((cfg_count++))
     done
-done
-
-# tolerance only affects labels, so we can safely use the last state of the generated data
-cfg_count=1
-for test_file in "${files[@]}"; do
-    # reset lemur_setup to default
-    rm -f "$dest_dir"/pretrain/*
-    rm -f "$dest_dir"/finetune/*
-    rm -f "$dest_dir"/test/*
-    cp "$source_dir"/pretrain/*.wav "$dest_dir"/pretrain/
-    cp "$source_dir"/finetune/*.wav "$dest_dir"/finetune/
-
-    # split up test file
-    mv "$dest_dir"/pretrain/$test_file "$dest_dir"/test
-    mv "$dest_dir"/finetune/$test_file "$dest_dir"/test
-
-    # create tar
-    cd "$dest_dir"
-    tar -cf "lemur_data_cfg${cfg_count}_${dest_name}.tar" *
-    mv "$dest_dir"/lemur_data* "$base_dir/data/lemur_tar/data_${dest_name}"
-    ((cfg_count++))
 done

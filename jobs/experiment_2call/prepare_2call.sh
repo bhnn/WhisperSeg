@@ -8,6 +8,10 @@ source_dir="$base_dir"/data/data_backup
 dest_dir="$base_dir"/data/lemur_setup
 dest_name="2call"
 
+# create destination directories if they don't exist
+mkdir -p "$base_dir/data/lemur_tar/data_${dest_name}"
+mkdir -p "$base_dir/data/lemur_tar/labels_${dest_name}"
+
 # prep
 # tolerance 0.5s, duration 2.5s
 # targets: wail, moan, (merged), remaining calls as vocal. pretrain, all vocal

@@ -8,6 +8,10 @@ source_dir="$base_dir/data/data_backup"
 dest_dir="$base_dir/data/lemur_setup"
 dest_name="aug150"
 
+# create destination directories if they don't exist
+mkdir -p "$base_dir/data/lemur_tar/data_${dest_name}"
+mkdir -p "$base_dir/data/lemur_tar/labels_${dest_name}"
+
 echo "[PREP] Loading python environment..."
 module load anaconda3
 source activate wseg
