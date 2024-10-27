@@ -1,18 +1,25 @@
-# Positive Transfer Of The Whisper Speech Transformer To Human And Animal Voice Activity Detection
-We proposed **WhisperSeg**, utilizing the Whisper Transformer pre-trained for Automatic Speech Recognition (ASR) for both human and animal Voice Activity Detection (VAD). For more details, please refer to our paper:
-> [**Positive Transfer of the Whisper Speech Transformer to Human and Animal Voice Activity Detection**](https://doi.org/10.1101/2023.09.30.560270)
-> 
-> Nianlong Gu, Kanghwi Lee, Maris Basha, Sumit Kumar Ram, Guanghao You, Richard H. R. Hahnloser <br>
-> University of Zurich and ETH Zurich
+# Thesis project: Automatic Detection, Segmentation and Classification of Lemur Vocalisations
 
-*Accepted to the 2024 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP 2024)*
+This repository contains the codebase of my thesis on detecting, segmenting and classifying *Lemur catta* vocalisations in outdoor audio recordings. It is a fork of the original [WhisperSeg](https://github.com/nianlonggu/WhisperSeg) model by Gu et al., as proposed in [their recent paper](https://ieeexplore.ieee.org/document/10447620).
 
-## Install Environment
-### Method 1: Install using environment.yml
+## Content
+
+- [Installation](#installation)
+- [Execution](#execution)
+- [Reproducing experiments](#reproducing-experiments)
+
+## Installation
+
+### Option 1: Install using anaconda/miniconda family
+
 ```bash
 conda env create -f environment.yml
 ```
-### Method 2: Install via pip
+
+### Option 2: Install manually using pip
+
+Linux:
+
 ```bash
 conda create -n wseg python=3.10 -y
 conda activate wseg
@@ -20,285 +27,99 @@ pip install -r requirements.txt
 conda install -c pypi cudnn -y
 ```
 
-**NOTE:** For method 1 and 2, if running WhisperSeg on windows, one need to further uninstall 'bitsandbytes' by 
-```bash
-pip uninstall bitsandbytes
-```
-and then install 'bitsandbytes-windows==0.37.5'
-```bash
-pip install bitsandbytes-windows==0.37.5
-```
+Windows:
 
-### Method 3 (only for Linux): 
-Directly download the packed anaconda environment at https://huggingface.co/datasets/nccratliri/whisperseg-conda-env/blob/main/wseg.tar.gz
-uncompress it by
 ```bash
-mkdir wseg
-tar -xzvf wseg.tar.gz -C wseg/
-```
-and put the unzipped folder 'wseg' to the path '~/anaconda3/envs/' (or ~/miniconda3/envs/). 
-
-Then open a new terminal, you can activate the 'wseg' environment by 
-```bash
+conda create -n wseg python=3.10 -y
 conda activate wseg
+pip install -r requirements_windows.txt
+conda install -c pypi cudnn -y
 ```
 
-## Documentation
-### Model Training and Evaluation
-Please refer to the following documents for the complete pipeline of training WhisperSeg, including 1) dataset processing, 2) model training and 3) model evaluation.
+## Execution
 
-1. [**Dataset Processing**](docs/DatasetProcessing.md)
-2. [**Model Training**](docs/ModelTraining.md)
-3. [**Evaluation**](docs/Evaluation.md)
+### Data Preparation
 
-We have also prepared a Jupyter notebook that provides a comprehensive walkthrough of WhisperSeg finetuning. This includes steps for data processing, training, and evaluation. You can access this notebook at [docs/WhisperSeg_Training_Pipeline.ipynb](docs/WhisperSeg_Training_Pipeline.ipynb), or run it in Google Colab: <a href="https://colab.research.google.com/github/nianlonggu/WhisperSeg/blob/master/docs/WhisperSeg_Training_Pipeline.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-
-### How To Use The Trained Model
-#### Use WhisperSeg in your Python code
-Please refer to the section [**Voice Activity Detection Demo**](README.md#voice-activity-detection-demo) below.
-
-#### Run WhisperSeg as a Web Service, and call it via API
-Please refer to the tutorial: [**Run WhisperSeg as a Web Service**](docs/RunWhisperSegAsWebService.md)  
-   This allows running WhisperSeg on a Web server, and call the segmentation service from any client of different environments, such as python or MatLab. The best way to incorporate WhisperSeg into your original workflow.
-
-#### Try WhisperSeg on a GUI (Webpage)
-Please refer to the tutorial: [**Run WhisperSeg via GUI**](docs/RunWhisperSegViaGUI.md)
-
-## Voice Activity Detection Demo<a href="https://colab.research.google.com/github/nianlonggu/WhisperSeg/blob/master/docs/WhisperSeg_Voice_Activity_Detection_Demo.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-We demonstrate here using a WhisperSeg trained on multi-species data to segment the audio files of different species.
-
-**Note:** If you are using your custom models, replace the model's name ("nccratliri/whisperseg-large-ms" or "nccratliri/whisperseg-large-ms-ct2") with your own trained model's name.
-
-### Load the pretrained multi-species WhisperSeg
-
-#### Huggingface model
-
+In order to train a new model, first a set of data files must be prepared. To start, split `.wav` audio files in halves using [split_wavs.py](/util/split_wavs.py). Move the resulting splits into a new directory (currently saved in same directory).
 
 ```python
-from model import WhisperSegmenter
-segmenter = WhisperSegmenter( "nccratliri/whisperseg-large-ms", device="cuda" )
+python util/split_wavs.py --path path/to/data
 ```
-#### CTranslate2 version for faster inference
 
-Alternatively, we provided a [CTranslate2](https://github.com/OpenNMT/CTranslate2) converted version, which enables 4x faster inference speed. 
+Next, annotate the split recordings using [Raven Pro/Lite](https://www.ravensoundsoftware.com/) and place Raven selection tables into the same folder. The assumed naming convention for further processing is `<.wav_file>.Table.1.selections.txt`.
 
-To use the CTranslate2 converted model (**with checkpoint name ended with "-ct2"**), we need to import the "**WhisperSegmenterFast**" module.
-
+Then proceed with running the code for table cleaning, converting to `.json` and trimming of unannotated audio from the front and back of the files. This will also split the results into pretraining and finetuning, into separate folders.
 
 ```python
-from model import WhisperSegmenterFast
-segmenter = WhisperSegmenterFast( "nccratliri/whisperseg-large-ms-ct2", device="cuda" )
+python util/clean_tables.py --path path/to/data/
+
+# duplicate data, as trimming alters files in-place
+mkdir -p pretrain finetune
+cp path/to/data/ pretrain
+cp path/to/data/ finetune
+
+python util/make_json.py --file_path ./pretrain --output_path ./pretrain
+python util/make_json.py --file_path ./finetune --output_path ./finetune
+python util/trim_wavs.py --file_path ./pretrain
+python util/trim_wavs.py --file_path ./finetune
 ```
 
-### Illustration of segmentation parameters
+Refer to [make_json.py](/util/make_json.py) for switches to modify `tolerance` or `clip_duration` values or for ways to filter and convert annotations (e.g. single calls, merging targets).
 
-The following paratemers need to be configured for different species.
-* **sr**: sampling rate $f_s$ of the audio when loading
-* **min_frequency**: the minimum frequency when computing the Log Melspectrogram. Frequency components below min_frequency will not be included in the input spectrogram
-* **spec_time_step**: Spectrogram Time Resolution. By default, one single input spectrogram of WhisperSeg contains 1000 columns. 'spec_time_step' represents the time difference between two adjacent columns in the spectrogram. It is equal to FFT_hop_size / sampling_rate: $\frac{L_\text{hop}}{f_s}$ .
-* **min_segment_length**: The minimum allowed length of predicted segments. The predicted segments whose length is below 'min_segment_length' will be discarded.
-* **eps**: The threshold $\epsilon_\text{vote}$ during the multi-trial majority voting when processing long audio files
-* **num_trials**: The number of segmentation variant produced during the multi-trial majority voting process. Setting num_trials to 1 for noisy data with long segment durations, such as the human AVA-speech dataset, and set num_trials to 3 when segmenting animal vocalizations.
+### Training and Evaluation
 
-The recommended settings of these parameters are available at [config/segment_config.json](config/segment_config.json). More details are described in Table 1 in the paper:
-![Specific Segmentation Parameters](assets/species_specific_parameters.png). 
-
-### Segmentation Examples
-
+Using the prepared data, models can now be trained. This process consists of a pretraining and a finetuning step. Gu et al. recommend using their model checkpoints with a multi-species pretraining history for enhanced effectiveness. These are available for the [Whisper-Base](https://huggingface.co/nccratliri/whisperseg-base-animal-vad-ct2) and [Whisper-Large](https://huggingface.co/nccratliri/whisperseg-animal-vad-ct2) model architectures and are automatically downloaded when running the model using their *huggingface* designation. For this, execute the following commands after each other. Each step may take some time, depending on your compute resources.
 
 ```python
-import librosa
-import json
-from audio_utils import SpecViewer
-### SpecViewer is a customized class for interactive spectrogram viewing
-spec_viewer = SpecViewer()
+python train.py \
+  --initial_model_path nccratliri/whisperseg-base-animal-vad \
+  --train_dataset_folder path/to/pretrain_data \
+  --model_folder path/to/save_trained_model \
+  --gpu_list 0 \
+  --max_num_epochs 10 \
+
+python train.py \
+  --initial_model_path path/to/<pretrained_model>/final_checkpoint \
+  --train_dataset_folder path/to/finetune_data \
+  --model_folder path/to/save_trained_model \
+  --gpu_list 0 \
+  --max_num_epochs 10 \
 ```
 
-#### Zebra finch (adults)
-
+If you have file(s) set aside for testing, you can evaluate the model's segmentation performance by running
 
 ```python
-sr = 32000  
-min_frequency = 0
-spec_time_step = 0.0025
-min_segment_length = 0.01
-eps = 0.02
-num_trials = 3
+python evaluate.py \
+  --dataset_path path/to/test_data \
+  --model_path path/to/<finetuned_model>/final_checkpoint_ct2 \
+  --output_dir path/to/results_dir
 ```
 
+For shell scripts that run these steps for you, refer to [train_base.sh](/jobs/train_large.sh), [evaluate_large.sh](jobs/evaluate_large.sh) and [infer_large.sh](/jobs/infer_large.sh). These scripts were written for a SLURM-controlled HPC environment and will handle moving data to a working directory, fully training a model, evaluating it and cleaning up after themselves. If you do not have access to such an environment, they will nonetheless be helpful to understand the training process.
 
-```python
-audio, _ = librosa.load( "data/example_subset/Zebra_finch/test_adults/zebra_finch_g17y2U-f00007.wav", 
-                         sr = sr )
-```
+More in-depth explanations of data processing, model training and evaluation can be found in the documentation of the original *WhisperSeg* implementation by Gu et al. ([here](https://github.com/nianlonggu/WhisperSeg?tab=readme-ov-file#model-training-and-evaluation) and [here](https://github.com/nianlonggu/WhisperSeg/tree/master/docs)).
 
+## Reproducing experiments
 
-```python
-prediction = segmenter.segment(  audio, sr = sr, min_frequency = min_frequency, spec_time_step = spec_time_step,
-                       min_segment_length = min_segment_length, eps = eps,num_trials = num_trials )
-print(prediction)
-```
+The code to reproduce all experiments in the thesis can be found in [jobs](/jobs/). Experiments that rely on a specific preparation of the data come with a `prepare_<exp>.sh` script that will process data into the required state.
 
-  {'onset': [0.01, 0.38, 0.603, 0.758, 0.912, 1.813, 1.967, 2.073, 2.838, 2.982, 3.112, 3.668, 3.828, 3.953, 5.158, 5.323, 5.467], 'offset': [0.073, 0.447, 0.673, 0.83, 1.483, 1.882, 2.037, 2.643, 2.893, 3.063, 3.283, 3.742, 3.898, 4.523, 5.223, 5.393, 6.043], 'cluster': ['zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0', 'zebra_finch_0']}
+Experiments:
 
+- Baseline-Pre: [Link](/jobs/experiment_baseline_pre/)
+- Batchsize & Learning rate: [Link](/jobs/experiment_bslr/)
+- Patience: [Link](/jobs/experiment_patience/)
+- Validation ratio: [Link](/jobs/experiment_vratio/)
+- Tolerance: [Link](/jobs/experiment_tolerance/)
+- Clip duration: [Link](/jobs/experiment_clipd/)
+- Call / no-call: [Link](/jobs/experiment_yesno/)
+- Single call: [Link](/jobs/experiment_single_call/)
+- 9 calls: [Link](/jobs/experiment_9call/)
+- Additional pretraining: [Link](/jobs/experiment_pre_parent/)
+- Class balancing: [Link](/jobs/experiment_balanced/)
+- Strategy augmentation: [Link](/jobs/experiment_single_call_balanced/)
+- 7+3 Un/Curated: [Link](/jobs/experiment_augmentation/)
+- 7+150: [Link](/jobs/experiment_aug150/)
 
-```python
-spec_viewer.visualize( audio = audio, sr = sr, min_frequency= min_frequency, prediction = prediction,
-                       window_size=8, precision_bits=1 
-                     )
-```
+## Acknowledgements
 
-![vis](assets/res_zebra_finch_adults_prediction_only.png)
-
-Let's load the human annoated segments and compare them with WhisperSeg's prediction.
-
-
-```python
-label = json.load( open("data/example_subset/Zebra_finch/test_adults/zebra_finch_g17y2U-f00007.json") )
-spec_viewer.visualize( audio = audio, sr = sr, min_frequency= min_frequency, prediction = prediction, label=label,
-                       window_size=8, precision_bits=1 
-                     )
-```
-
-![vis](assets/res_zebra_finch_adults.png)
-
-#### Zebra finch (juveniles)
-
-
-```python
-sr = 32000  
-min_frequency = 0
-spec_time_step = 0.0025
-min_segment_length = 0.01
-eps = 0.02
-num_trials = 3
-
-audio_file = "data/example_subset/Zebra_finch/test_juveniles/zebra_finch_R3428_40932.29996086_1_24_8_19_56.wav"
-label_file = audio_file[:-4] + ".json"
-audio, _ = librosa.load( audio_file, sr = sr )
-label = json.load( open(label_file) )
-
-prediction = segmenter.segment(  audio, sr = sr, min_frequency = min_frequency, spec_time_step = spec_time_step,
-                       min_segment_length = min_segment_length, eps = eps,num_trials = num_trials )
-spec_viewer.visualize( audio = audio, sr = sr, min_frequency= min_frequency, prediction = prediction, label=label, 
-                       window_size=15, precision_bits=1 )
-```
-
-![vis](assets/res_zebra_finch_juveniles.png)
-
-#### Bengalese finch
-
-
-```python
-sr = 32000  
-min_frequency = 0
-spec_time_step = 0.0025
-min_segment_length = 0.01
-eps = 0.02
-num_trials = 3
-
-audio_file = "data/example_subset/Bengalese_finch/test/bengalese_finch_bl26lb16_190412_0721.20144_0.wav"
-label_file = audio_file[:-4] + ".json"
-audio, _ = librosa.load( audio_file, sr = sr )
-label = json.load( open(label_file) )
-
-prediction = segmenter.segment(  audio, sr = sr, min_frequency = min_frequency, spec_time_step = spec_time_step,
-                       min_segment_length = min_segment_length, eps = eps,num_trials = num_trials )
-spec_viewer.visualize( audio = audio, sr = sr, min_frequency= min_frequency, prediction = prediction, label=label, 
-                       window_size=3 )
-```
-
-![vis](assets/res_bengalese_finch.png)
-
-#### Marmoset
-
-
-```python
-sr = 48000  
-min_frequency = 0
-spec_time_step = 0.0025
-min_segment_length = 0.01
-eps = 0.02
-num_trials = 3
-
-audio_file = "data/example_subset/Marmoset/test/marmoset_pair4_animal1_together_A_0.wav"
-label_file = audio_file[:-4] + ".json"
-audio, _ = librosa.load( audio_file, sr = sr )
-label = json.load( open(label_file) )
-
-prediction = segmenter.segment(  audio, sr = sr, min_frequency = min_frequency, spec_time_step = spec_time_step,
-                       min_segment_length = min_segment_length, eps = eps,num_trials = num_trials )
-spec_viewer.visualize( audio = audio, sr = sr, min_frequency= min_frequency, prediction = prediction, label=label )
-```
-
-![vis](assets/res_marmoset.gif)
-
-#### Mouse
-
-
-```python
-sr = 300000  
-min_frequency = 35000
-spec_time_step = 0.0005
-min_segment_length = 0.01
-eps = 0.02
-num_trials = 3
-
-audio_file = "data/example_subset/Mouse/test/mouse_Rfem_Afem01_0.wav"
-label_file = audio_file[:-4] + ".json"
-audio, _ = librosa.load( audio_file, sr = sr )
-label = json.load( open(label_file) )
-
-prediction = segmenter.segment(  audio, sr = sr, min_frequency = min_frequency, spec_time_step = spec_time_step,
-                       min_segment_length = min_segment_length, eps = eps,num_trials = num_trials )
-spec_viewer.visualize( audio = audio, sr = sr, min_frequency= min_frequency, prediction = prediction, label=label )
-```
-
-![vis](assets/res_mouse.gif)
-
-#### Human (AVA-Speech)
-
-
-```python
-sr = 16000  
-min_frequency = 0
-spec_time_step = 0.01
-min_segment_length = 0.1
-eps = 0.2
-num_trials = 1
-
-audio_file = "data/example_subset/Human_AVA_Speech/test/human_xO4ABy2iOQA_clip.wav"
-label_file = audio_file[:-4] + ".json"
-audio, _ = librosa.load( audio_file, sr = sr )
-label = json.load( open(label_file) )
-
-prediction = segmenter.segment(  audio, sr = sr, min_frequency = min_frequency, spec_time_step = spec_time_step,
-                       min_segment_length = min_segment_length, eps = eps,num_trials = num_trials )
-spec_viewer.visualize( audio = audio, sr = sr, min_frequency= min_frequency, prediction = prediction, label=label, 
-                       window_size=20, precision_bits=0, xticks_step_size = 2 )
-```
-
-![vis](assets/res_human.gif)
-
-## Citation
-When using our code or models for your work, please cite the following paper:
-```
-@article {Gu2023.09.30.560270,
-	author = {Nianlong Gu and Kanghwi Lee and Maris Basha and Sumit Kumar Ram and Guanghao You and Richard Hahnloser},
-	title = {Positive Transfer of the Whisper Speech Transformer to Human and Animal Voice Activity Detection},
-	elocation-id = {2023.09.30.560270},
-	year = {2023},
-	doi = {10.1101/2023.09.30.560270},
-	publisher = {Cold Spring Harbor Laboratory},
-	abstract = {This paper introduces WhisperSeg, utilizing the Whisper Transformer pre-trained for Automatic Speech Recognition (ASR) for human and animal Voice Activity Detection (VAD). Contrary to traditional methods that detect human voice or animal vocalizations from a short audio frame and rely on careful threshold selection, WhisperSeg processes entire spectrograms of long audio and generates plain text representations of onset, offset, and type of voice activity. Processing a longer audio context with a larger network greatly improves detection accuracy from few labeled examples. We further demonstrate a positive transfer of detection performance to new animal species, making our approach viable in the data-scarce multi-species setting.Competing Interest StatementThe authors have declared no competing interest.},
-	URL = {https://www.biorxiv.org/content/early/2023/10/02/2023.09.30.560270},
-	eprint = {https://www.biorxiv.org/content/early/2023/10/02/2023.09.30.560270.full.pdf},
-	journal = {bioRxiv}
-}
-```
-
-## Contact
-Nianlong Gu
-nianlong.gu@uzh.ch
-
-
+- Nianlong Gu, for his kind assistance
