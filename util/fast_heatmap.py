@@ -25,11 +25,24 @@ sns.heatmap(
     linewidths=.25,
     linecolor='#222',
     # xticklabels=['cl', 'm', 'l', 'ca', 'sh', 'b', 'pc', 'p1', 'cm', '+', 'h', 'pu', 'mo', 'w', 'p2', '+', 't', 'sq', 'y', 'hu', '+', 'Total'],
-    xticklabels=['click', 'mid', 'low', 'cackle', 'short hmm', 'bark', 'pre-click', 'generic p1', 'click-series', '+', 'hmm', 'purr', 'moan', 'wail', 'generic p2', '+', 'trill', 'squiggly', 'yip', 'huh', '+', 'Total'],
+    xticklabels=['click', 'mid', 'low', 'cackle', 'short hmm', 'bark', 'pre-click', 'generic p1', 'click-series', '<20 samples', 'hmm', 'purr', 'moan', 'wail', 'generic p2', '<20 samples', 'trill', 'squiggly', 'yip', 'huh', '<20 samples', 'Total'],
     yticklabels=['File1', 'File2', 'File3', 'File4', 'File5', 'File6', 'File7', 'Total'],
     ax=ax,
     cbar_kws={"shrink": 0.45}
 )
+
+# horizontal lines
+ax.axvline(x=10, linewidth=2, color='white')
+ax.axvline(x=16, linewidth=2, color='white')
+
+# secondary x axis
+sec_ax = ax.secondary_xaxis('top')
+sec_ax.set_ticks([5, 13, 19])
+sec_ax.set_xticklabels(['P1', 'P2', 'P3'])
+sec_ax.spines['bottom'].set_position(('outward', 10))
+sec_ax.spines['bottom'].set_visible(False)
+sec_ax.tick_params(length=0, pad=5)
+
 plt.yticks(rotation=0)
 plt.xticks(rotation=-45, ha='left')
-plt.savefig(f'/usr/users/bhenne/projects/whisperseg/results/new_fast_heatmap.pdf', format='pdf', dpi=400, bbox_inches='tight')
+plt.savefig(f'/usr/users/bhenne/projects/whisperseg/results/fast_heatmap.pdf', format='pdf', dpi=400, bbox_inches='tight')
