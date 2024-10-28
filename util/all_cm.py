@@ -18,7 +18,7 @@ def confusion_matrix_framewise(prediction: np.ndarray, label: np.ndarray, cluste
     """
     # sort both numerical and alphabetical labels by the alphabetical order
     labels_alpha, labels_num = zip(*sorted(zip(cluster_to_id_mapper.keys(), cluster_to_id_mapper.values())))
-    labels_alpha = list(['#', *labels_alpha])
+    labels_alpha = list(['Background', *labels_alpha])
     labels_num = list([-1, *labels_num])
     
     labels_alpha = [l if l != 'mo' else 'moan' for l in labels_alpha]
@@ -37,6 +37,7 @@ def confusion_matrix_framewise(prediction: np.ndarray, label: np.ndarray, cluste
     # cm_annotations = [['' if x == 0 else f'{x:.3f}' for x in row] for row in cm]
     cm_annotations = [[f'{x:.3f}' for x in row] for row in cm]
     # cm_annotations = [['' if x < 0.01 else f'{x:.3f}' for x in row] for row in cm]
+    sns.set(font_scale=1.1)
     sns.heatmap(
         data=cm,
         # vmax=580000,
@@ -52,10 +53,12 @@ def confusion_matrix_framewise(prediction: np.ndarray, label: np.ndarray, cluste
     )
     # plot adjustments
     plt.yticks(rotation=0)
-    ax.set_xlabel('Predicted label')
-    ax.set_ylabel('True label')
+    ax.set_xlabel('Predicted label', fontsize=16)
+    ax.set_ylabel('True label', fontsize=16)
+    ax.tick_params(axis='both', which='major', labelsize=14)
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-    plt.savefig(f'/usr/users/bhenne/projects/whisperseg/results/{current_time}_cm_framewise.pdf', format='pdf', dpi=400, bbox_inches='tight')
+    # plt.savefig(f'/usr/users/bhenne/projects/whisperseg/results/{current_time}_cm_framewise.pdf', format='pdf', dpi=400, bbox_inches='tight')
+    plt.savefig(f'D:\\work\\whisperseg\\results\\{current_time}_cm_framewise.pdf', format='pdf', dpi=400, bbox_inches='tight')
 
 def gather_predictions(data_path: str, time_per_frame_for_scoring=0.001, **kwargs) -> (tuple[list[np.ndarray], list[np.ndarray], dict]):
     """Gather predictions and labels from all cmraw files in the data_path
