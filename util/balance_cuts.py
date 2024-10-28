@@ -1,5 +1,4 @@
 import argparse
-import csv
 import json
 from copy import deepcopy
 from os.path import join
