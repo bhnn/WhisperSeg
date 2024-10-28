@@ -101,7 +101,7 @@ More in-depth explanations of data processing, model training and evaluation can
 
 ## Reproducing experiments
 
-The code to reproduce all experiments in the thesis can be found in [jobs](/jobs/). Experiments that rely on a specific preparation of the data come with a `prepare_<exp>.sh` script that will process data into the required state.
+The code to reproduce all experiments in the thesis can be found in [jobs](/jobs/). Experiments that rely on a specific preparation of the data come with a `prepare_<exp>.sh` script that will process data into the required state. Otherwise, each experiment consists of one or more `job_<exp>.sh` files (e.g. for rtx5000 vs v100) and a `run_<exp>.sh` file that sends a number of these jobs to the HPC controller.
 
 Experiments:
 
@@ -122,4 +122,4 @@ Experiments:
 
 ## Acknowledgements
 
-- Nianlong Gu, for his kind assistance
+- Nianlong Gu, for his kind assistance with questions about the original codebase
